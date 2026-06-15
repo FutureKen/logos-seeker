@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Logos Seeker — Recovery Version Bible Search</title>
+    <meta
+      name="description"
+      content="Search the Recovery Version Bible (English & Chinese) by reference or word. Static, serverless, works offline."
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Set the theme before first paint to avoid a flash of the wrong mode. -->
+    <script>
+      (function () {
+        var t = localStorage.getItem("ls-theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches
+            ? "light"
+            : "dark";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1 class="brand">
+        <img src="favicon.svg" alt="" class="brand-icon" width="28" height="28" />
+        Logos&nbsp;Seeker
+      </h1>
+      <div class="topbar-tools">
+        <div class="lang-toggle" role="group" aria-label="Display language">
+          <button type="button" data-lang="en" class="active">EN</button>
+          <button type="button" data-lang="cn">中文</button>
+        </div>
+        <button
+          type="button"
+          id="theme-toggle"
+          class="theme-toggle"
+          aria-label="Toggle light/dark mode"
+          title="Toggle light/dark mode"
+        ></button>
+      </div>
+    </header>
+
+    <main>
+      <form id="search-form" autocomplete="off">
+        <div class="search-box">
+          <input
+            id="q"
+            type="text"
+            placeholder="Search — e.g. John 1:1, 约翰福音 1:1, Christ, 基督"
+            aria-label="Search the Bible"
+            enterkeyhint="search"
+          />
+          <button
+            id="clear"
+            type="button"
+            class="clear-btn"
+            aria-label="Clear search (Esc)"
+            title="Clear (Esc)"
+            hidden
+          >
+            &times;
+          </button>
+        </div>
+      </form>
+
+      <p id="status" class="status" aria-live="polite"></p>
+      <div id="results" class="results"></div>
+    </main>
+
+    <button id="deselect-all" type="button" class="deselect-btn" hidden>
+      Deselect all
+    </button>
+
+    <footer class="foot">
+      <span>
+        <a href="https://www.recoveryversion.bible/" target="_blank" rel="noopener noreferrer"
+          >Recovery Version</a
+        >
+        · English &amp; 中文
+      </span>
+      <span class="muted">Static &amp; offline after first load</span>
+      <span class="muted">For personal use only.</span>
+    </footer>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

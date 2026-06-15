@@ -1,0 +1,600 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1d212b;
+  --text: #e6e8ee;
+  --muted: #97a0b0;
+  --accent: #6ea8fe;
+  --accent-soft: #25406e;
+  --sel-bg: #1c3357;
+  --sel-hover: #1a2230;
+  --mark: #ffd66e;
+  --border: #2a2f3a;
+  --radius: 12px;
+  --maxw: 820px;
+}
+
+/* Light palette, shared by the explicit toggle and the OS-preference fallback. */
+:root[data-theme="light"] {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #f0f2f6;
+  --text: #1a1d24;
+  --muted: #5c6573;
+  --accent: #2f6fed;
+  --accent-soft: #d7e3ff;
+  --sel-bg: #dbe7ff;
+  --sel-hover: #eef2f8;
+  --mark: #ffe08a;
+  --border: #e1e5ec;
+}
+
+/* Follow the OS only when the user hasn't picked a theme explicitly. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --panel-2: #f0f2f6;
+    --text: #1a1d24;
+    --muted: #5c6573;
+    --accent: #2f6fed;
+    --accent-soft: #d7e3ff;
+    --sel-bg: #dbe7ff;
+    --sel-hover: #eef2f8;
+    --mark: #ffe08a;
+    --border: #e1e5ec;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px 16px 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+.brand-icon {
+  display: block;
+  flex: none;
+}
+
+.topbar-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Glyph: moon when dark (click → go light), sun when light (click → go dark). */
+.theme-toggle::before {
+  content: "\1F319"; /* 🌙 */
+}
+
+:root[data-theme="light"] .theme-toggle::before {
+  content: "\2600"; /* ☀ */
+}
+
+.lang-toggle button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+#search-form {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 0;
+  background: linear-gradient(var(--bg) 70%, transparent);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#q {
+  width: 100%;
+  padding: 16px 46px 16px 18px;
+  font-size: 18px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#q:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* hide native search clear control (we provide our own) */
+#q::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.clear-btn:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
+.clear-btn[hidden] {
+  display: none;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 14px;
+  min-height: 20px;
+  margin: 4px 2px 12px;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Compact single-line verse row: [copy] [ref] text */
+.verse {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* widen the left edge so the selected accent bar has room without shifting text */
+.verse {
+  border-left-width: 3px;
+}
+
+.verse:hover {
+  background: var(--sel-hover);
+  border-color: var(--accent);
+}
+
+.copy-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--accent);
+  background: var(--panel-2);
+  border-color: var(--border);
+}
+
+.copy-btn.copied {
+  color: #2ec27e;
+  border-color: #2ec27e;
+}
+
+.verse .ref {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 6px;
+  padding: 2px 7px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.verse .ref:hover {
+  text-decoration: underline;
+}
+
+.verse .text {
+  flex: 1 1 auto;
+  font-size: 16px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.verse.cn .text {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+/* Selected verse — high-contrast: accent left bar, filled background, ring */
+.verse.selected,
+.chapter-block .verse.selected {
+  background: var(--sel-bg);
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  box-shadow: inset 3px 0 0 0 var(--accent), 0 0 0 1px var(--accent);
+}
+
+.verse.selected:hover {
+  background: var(--sel-bg);
+}
+
+/* turn the copy button into a solid accent chip when its row is selected */
+.verse.selected .copy-btn {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.verse.selected .ref {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* brief pulse the moment a verse is selected, for clear click feedback */
+@keyframes verse-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.012); }
+  100% { transform: scale(1); }
+}
+
+.verse.just-selected {
+  animation: verse-pop 0.22s ease-out;
+}
+
+.verse mark {
+  background: var(--mark);
+  color: #1a1d24;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.verse .alt-note {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.fuzzy-chapter .text.muted {
+  color: var(--muted);
+  font-size: 14px;
+  cursor: default;
+}
+
+.chapter-block {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.chapter-block .verse {
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 6px;
+  background: transparent;
+}
+
+.chapter-block .verse:hover {
+  background: var(--panel-2);
+}
+
+.chapter-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 6px 10px;
+}
+
+.chapter-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.il-toggle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.il-toggle:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.il-toggle.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.chapter-block .verse .vnum {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+/* ---- Interlinear verse layout (EN line above CN line) ---- */
+.verse.interlinear {
+  align-items: flex-start;
+}
+
+.verse.interlinear .il-stack {
+  display: flex;
+  gap: 8px;
+}
+
+.verse.interlinear .vnum {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.il-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.il-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.il-line .il-text {
+  font-size: 15.5px;
+}
+
+.il-line.cn .il-text {
+  font-size: 16.5px;
+  line-height: 1.7;
+}
+
+.il-line.cn {
+  padding-bottom: 2px;
+}
+
+.empty,
+.loading {
+  color: var(--muted);
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.hint {
+  color: var(--muted);
+  text-align: center;
+  padding: 36px 16px;
+  font-size: 15px;
+}
+
+.hint code {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--text);
+}
+
+.foot {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+.deselect-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.deselect-btn:hover {
+  filter: brightness(1.08);
+}
+
+.deselect-btn[hidden] {
+  display: none;
+}
+
+/* "More results" button under keyword search results */
+.more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.more-btn:hover {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  #q {
+    font-size: 16px;
+  }
+  .verse {
+    flex-wrap: wrap;
+  }
+  .verse .text {
+    font-size: 15px;
+    flex-basis: 100%;
+  }
+}

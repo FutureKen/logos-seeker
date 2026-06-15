@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Logos Seeker">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dde8ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded square background -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- open book, large and centered for legibility at small sizes -->
+  <g stroke="#15306e" stroke-width="2" stroke-linejoin="round">
+    <path d="M32 16 C26 12.5 18 12 11 14 L11 45 C18 43 26 43.5 32 47 Z" fill="url(#page)"/>
+    <path d="M32 16 C38 12.5 46 12 53 14 L53 45 C46 43 38 43.5 32 47 Z" fill="url(#page)"/>
+  </g>
+  <!-- center binding -->
+  <path d="M32 16 L32 47" stroke="#15306e" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- page text lines -->
+  <g stroke="#a8c0ec" stroke-width="2" stroke-linecap="round">
+    <path d="M17 22 L27 23.2"/>
+    <path d="M17 28 L27 29"/>
+    <path d="M37 23.2 L47 22"/>
+    <path d="M37 29 L47 28"/>
+  </g>
+
+  <!-- magnifier in the lower-right, with a dark ring so it reads on the pages -->
+  <g>
+    <circle cx="41" cy="40" r="12.5" fill="#ffd66e" stroke="#15306e" stroke-width="2.4"/>
+    <circle cx="41" cy="40" r="7" fill="none" stroke="#15306e" stroke-width="2.6"/>
+    <line x1="50" y1="49" x2="57" y2="56" stroke="#ffd66e" stroke-width="6" stroke-linecap="round"/>
+    <line x1="50" y1="49" x2="57" y2="56" stroke="#15306e" stroke-width="3.4" stroke-linecap="round"/>
+  </g>
+</svg>
