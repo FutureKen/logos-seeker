@@ -3,6 +3,40 @@
   "version": "1.0.0",
   "description": "Bilingual (English / Chinese) Recovery Version Bible scripture search — static & serverless.",
   "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./data/books.json": "./data/books.json",
+    "./data/verses.json": "./data/verses.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/index.js",
+    "src/search.js",
+    "src/parseQuery.js",
+    "data/books.json",
+    "data/verses.json"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "bible",
+    "scripture",
+    "recovery-version",
+    "search",
+    "bilingual",
+    "chinese",
+    "english"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FutureKen/logos-seeker.git"
+  },
+  "homepage": "https://github.com/FutureKen/logos-seeker#readme",
+  "bugs": {
+    "url": "https://github.com/FutureKen/logos-seeker/issues"
+  },
+  "author": "FutureKen",
   "scripts": {
     "serve": "npx --yes serve@latest -l 5050 ."
   },

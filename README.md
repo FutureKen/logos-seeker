@@ -74,6 +74,42 @@ node scripts/test-parse.mjs    # reference-parsing assertions
 node scripts/test-search.mjs   # search-engine assertions (uses local data)
 ```
 
+## Use as a library (npm)
+
+The search engine and query parser are also published as an npm package, with
+the verse data bundled under `logos-seeker/data/`.
+
+```bash
+npm install logos-seeker
+```
+
+```js
+import { BibleSearch, COL } from "logos-seeker";
+
+const bible = new BibleSearch();
+
+// Browser: serve the JSON statically, then point load() at its base path
+// (defaults to "" → fetches "data/verses.json" + "data/books.json").
+await bible.load("/some/base/");
+
+// Node / bundler: read or import the JSON and inject it directly.
+// import verses from "logos-seeker/data/verses.json" with { type: "json" };
+// import books  from "logos-seeker/data/books.json"  with { type: "json" };
+// bible.setData(verses, books);
+
+const ref = bible.parse("John 3:16");               // { type: "ref", ... }
+const rows = bible.lookupReference(ref);            // [rowIdx, ...]
+for (const i of rows) {
+  console.log(bible.refLabel(bible.verses[i], "en"), bible.verses[i][COL.EN]);
+}
+
+const { rows: hits } = bible.wordSearch("基督", "cn"); // word/phrase search
+```
+
+Exported API: `BibleSearch`, `COL`, `parseQuery`, `parseReference`,
+`buildAliasIndex`, `hasCJK`. The data files are reachable at
+`logos-seeker/data/books.json` and `logos-seeker/data/verses.json`.
+
 ## Deploy to GitHub Pages
 
 1. Push this repo to GitHub.

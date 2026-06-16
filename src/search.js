@@ -26,7 +26,25 @@ export class BibleSearch {
     this._loading = null;
   }
 
-  /** Lazy-load data files once; safe to call repeatedly. */
+  /**
+   * Index already-parsed data. Use this in Node or a bundler where the JSON is
+   * read/imported directly rather than fetched (`logos-seeker/data/*.json`).
+   *   verses: array of rows [bookIdx, chapter, verse, enText, cnText]
+   *   books:  array of book metadata
+   */
+  setData(verses, books) {
+    this.verses = verses;
+    this.books = books;
+    this.aliasIndex = buildAliasIndex(this.books);
+    this.bookByIdx = new Map(this.books.map((b) => [b.idx, b]));
+    this.refMap = new Map();
+    for (let i = 0; i < this.verses.length; i++) {
+      const r = this.verses[i];
+      this.refMap.set(`${r[COL.BOOK]}:${r[COL.CHAP]}:${r[COL.VERSE]}`, i);
+    }
+  }
+
+  /** Lazy-load data files via fetch once (browser); safe to call repeatedly. */
   async load(basePath = "") {
     if (this.verses) return;
     if (this._loading) return this._loading;
@@ -36,15 +54,7 @@ export class BibleSearch {
         fetch(`${basePath}data/books.json`),
       ]);
       if (!vRes.ok || !bRes.ok) throw new Error("Failed to load Bible data files.");
-      this.verses = await vRes.json();
-      this.books = await bRes.json();
-      this.aliasIndex = buildAliasIndex(this.books);
-      this.bookByIdx = new Map(this.books.map((b) => [b.idx, b]));
-      this.refMap = new Map();
-      for (let i = 0; i < this.verses.length; i++) {
-        const r = this.verses[i];
-        this.refMap.set(`${r[COL.BOOK]}:${r[COL.CHAP]}:${r[COL.VERSE]}`, i);
-      }
+      this.setData(await vRes.json(), await bRes.json());
     })();
     return this._loading;
   }
