@@ -220,6 +220,41 @@ main {
   display: none;
 }
 
+/* "Back to results" — sits just left of the clear button, shown only while a
+   chapter view is covering an earlier result list. */
+.back-btn {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.back-btn:hover {
+  color: #fff;
+  background: var(--accent);
+}
+
+.back-btn[hidden] {
+  display: none;
+}
+
+/* keep the text clear of the extra button */
+.search-box.has-back #q {
+  padding-right: 82px;
+}
+
 .status {
   color: var(--muted);
   font-size: 14px;
@@ -345,6 +380,30 @@ main {
 
 .verse.just-selected {
   animation: verse-pop 0.22s ease-out;
+}
+
+/* Verse the chapter view jumped to — fades out so the eye finds it, then
+   leaves the chapter reading cleanly. */
+@keyframes verse-focus-fade {
+  0%, 55% {
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 0 var(--accent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.chapter-block .verse.focused {
+  animation: verse-focus-fade 2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-block .verse.focused {
+    animation: none;
+    background: var(--accent-soft);
+  }
 }
 
 .verse mark {

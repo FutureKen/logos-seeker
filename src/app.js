@@ -13,7 +13,9 @@ let lastQuery = ""; // remember the active query for re-render on toggle
 
 const $q = document.getElementById("q");
 const $form = document.getElementById("search-form");
+const $searchBox = document.querySelector(".search-box");
 const $clear = document.getElementById("clear");
+const $back = document.getElementById("back-to-results");
 const $status = document.getElementById("status");
 const $results = document.getElementById("results");
 const $toggle = document.querySelector(".lang-toggle");
@@ -203,7 +205,22 @@ function interlinearLine(row, which) {
   </div>`;
 }
 
-function renderChapter(rowIdx, { scroll = true } = {}) {
+/**
+ * Scroll `el` to just below the sticky search bar (scrollIntoView alone would
+ * tuck it underneath).
+ */
+function scrollBelowSearchBar(el) {
+  const offset = ($form ? $form.offsetHeight : 0) + 8;
+  const top = el.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+}
+
+/**
+ * Render the full chapter containing `rowIdx`. By default the view lands on
+ * that verse (highlighted briefly) rather than at the top of the chapter; pass
+ * `focusRow: null` to render without moving to a specific verse.
+ */
+function renderChapter(rowIdx, { scroll = true, focusRow = rowIdx } = {}) {
   const rows = bs.chapterRowsForRow(rowIdx);
   if (!rows.length) return;
   currentChapterRow = rowIdx;
@@ -257,7 +274,76 @@ function renderChapter(rowIdx, { scroll = true } = {}) {
     </div>`;
   setStatus("");
   syncSelectionUI();
-  if (scroll) $results.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!scroll) return;
+
+  // Land on the verse that was clicked. Verse 1 (and any request without a
+  // focus verse) starts at the chapter heading instead.
+  const target =
+    focusRow != null && focusRow !== rows[0]
+      ? $results.querySelector(`.verse[data-idx="${focusRow}"]`)
+      : null;
+  if (target) {
+    scrollBelowSearchBar(target);
+    target.classList.add("focused");
+    setTimeout(() => target.classList.remove("focused"), 2000);
+  } else {
+    $results.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* ------------------- back to results (chapter view) ------------------- */
+
+/**
+ * The result list that was on screen when the user opened a chapter, kept so
+ * the "back to results" button can put it back exactly as it was — including
+ * how many keyword pages had been revealed and where the page was scrolled.
+ * Null whenever there is nothing to go back to.
+ */
+let resultsSnapshot = null;
+
+function captureResults() {
+  resultsSnapshot = {
+    html: $results.innerHTML,
+    status: $status.textContent,
+    scrollY: window.scrollY,
+    word: { ...wordResults },
+  };
+  syncBackBtn();
+}
+
+/** Drop the back target (any new search replaces what we'd go back to). */
+function forgetResults() {
+  if (!resultsSnapshot) return;
+  resultsSnapshot = null;
+  syncBackBtn();
+}
+
+function restoreResults() {
+  if (!resultsSnapshot) return;
+  const snap = resultsSnapshot;
+  resultsSnapshot = null;
+  currentChapterRow = null; // leaving chapter view
+  wordResults = snap.word;
+  $results.innerHTML = snap.html;
+  setStatus(snap.status);
+  // Verses selected while reading the chapter are selected here too.
+  for (const el of $results.querySelectorAll(".verse[data-idx]")) {
+    el.classList.toggle("selected", selected.has(Number(el.dataset.idx)));
+  }
+  syncSelectionUI();
+  syncBackBtn();
+  // Instant, not smooth: going back should feel like returning, not travelling.
+  window.scrollTo({ top: snap.scrollY });
+}
+
+/** Show/hide and label the back button to match the current state. */
+function syncBackBtn() {
+  const on = resultsSnapshot != null;
+  $back.hidden = !on;
+  $searchBox.classList.toggle("has-back", on);
+  const label = lang === "cn" ? "返回搜索结果" : "Back to search results";
+  $back.setAttribute("aria-label", label);
+  $back.title = label;
 }
 
 /**
@@ -332,6 +418,8 @@ async function runSearch(raw, { pushHash = true } = {}) {
   // re-runs the same query and should preserve the current selection).
   if (query !== lastQuery) clearSelection();
   lastQuery = query;
+  // Whatever we render below becomes the new "results" — nothing to go back to.
+  forgetResults();
   if (!query) {
     showHint();
     if (pushHash) location.hash = "";
@@ -452,6 +540,7 @@ function setLang(next, { rerun = true } = {}) {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   }
   document.documentElement.lang = lang === "cn" ? "zh" : "en";
+  syncBackBtn(); // relabel in the new language
   // Re-render current results in the new language without re-searching.
   if (rerun && lastQuery) {
     runSearch(lastQuery, { pushHash: false });
@@ -583,6 +672,7 @@ $q.addEventListener("keydown", (e) => {
   }
 });
 $clear.addEventListener("click", clearSearch);
+$back.addEventListener("click", restoreResults);
 
 $form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -623,9 +713,11 @@ $results.addEventListener("click", (e) => {
     copyFromButton(Number(copyBtn.dataset.copy), copyBtn);
     return;
   }
-  // Clicking a reference jumps to the full chapter.
+  // Clicking a reference jumps to the full chapter — remember the list we came
+  // from so the back button can return to it.
   const refEl = e.target.closest("[data-row]");
   if (refEl) {
+    captureResults();
     renderChapter(Number(refEl.dataset.row));
     return;
   }
@@ -674,6 +766,7 @@ for (const btn of $toggle.querySelectorAll("button")) {
   btn.classList.toggle("active", btn.dataset.lang === lang);
 }
 document.documentElement.lang = lang === "cn" ? "zh" : "en";
+syncBackBtn();
 
 const initial = readHash();
 if (initial) {
