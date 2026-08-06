@@ -756,6 +756,24 @@ function readHash() {
   return m ? decodeURIComponent(m[1]) : "";
 }
 
+/* ----------------------------- offline ----------------------------- */
+
+/**
+ * Register the service worker that keeps the app (and the verse data) on the
+ * device, so an iOS home-screen launch works with no connection. Relative path
+ * so it resolves under a project subpath as well as at a domain root.
+ */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(new URL("../sw.js", import.meta.url)).catch(() => {
+      // No offline support (private mode, unsupported browser) — the app still
+      // works normally online.
+    });
+  });
+  // Ask for storage that survives eviction pressure; ignored where unsupported.
+  navigator.storage?.persist?.().catch(() => {});
+}
+
 /* ----------------------------- init ----------------------------- */
 
 // Apply the saved (or OS-derived) theme on first paint.
