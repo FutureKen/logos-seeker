@@ -112,7 +112,21 @@
       </span>
       <span class="muted">Static &amp; offline after first load</span>
       <span class="muted">For personal use only.</span>
+      <button type="button" id="install-help-link" class="link-btn">
+        How to add to Home Screen
+      </button>
     </footer>
+
+    <!-- Filled in by app.js so the steps follow the EN/CN toggle. -->
+    <dialog id="install-help" class="help-dialog" aria-labelledby="install-help-title">
+      <div class="help-head">
+        <h2 id="install-help-title"></h2>
+        <button type="button" id="install-help-close" class="clear-btn help-close">
+          &times;
+        </button>
+      </div>
+      <div id="install-help-body" class="help-body"></div>
+    </dialog>
 
     <script type="module" src="src/app.js"></script>
   </body>

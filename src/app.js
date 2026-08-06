@@ -541,6 +541,7 @@ function setLang(next, { rerun = true } = {}) {
   }
   document.documentElement.lang = lang === "cn" ? "zh" : "en";
   syncBackBtn(); // relabel in the new language
+  renderHelp();
   // Re-render current results in the new language without re-searching.
   if (rerun && lastQuery) {
     runSearch(lastQuery, { pushHash: false });
@@ -756,6 +757,76 @@ function readHash() {
   return m ? decodeURIComponent(m[1]) : "";
 }
 
+/* --------------------- add-to-home-screen help --------------------- */
+
+const $helpLink = document.getElementById("install-help-link");
+const $helpDialog = document.getElementById("install-help");
+const $helpTitle = document.getElementById("install-help-title");
+const $helpBody = document.getElementById("install-help-body");
+const $helpClose = document.getElementById("install-help-close");
+
+// Screenshots of the iOS Safari flow, in the order they're performed. Sizes are
+// the intrinsic pixel dimensions, given so the dialog doesn't jump as they load.
+const HELP_STEPS = [
+  {
+    img: "assets/ios-1-more.jpg",
+    w: 694,
+    h: 150,
+    en: "In Safari, tap the <strong>•••</strong> button at the right of the address bar.",
+    cn: "在 Safari 中，点按网址栏右侧的 <strong>•••</strong> 按钮。",
+  },
+  {
+    img: "assets/ios-2-share.jpg",
+    w: 378,
+    h: 458,
+    en: "Choose <strong>Share</strong> at the top of the menu.",
+    cn: "在菜单顶部选择 <strong>分享</strong>（Share）。",
+  },
+  {
+    img: "assets/ios-3-add.jpg",
+    w: 366,
+    h: 468,
+    en: "Scroll down and tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.",
+    cn: "向下滑动，点按 <strong>添加到主屏幕</strong>（Add to Home Screen），然后点 <strong>添加</strong>。",
+  },
+];
+
+/** Fill the dialog in the current language (called on open and on EN/CN switch). */
+function renderHelp() {
+  const cn = lang === "cn";
+  $helpLink.textContent = cn ? "如何添加到主屏幕" : "How to add to Home Screen";
+  $helpTitle.textContent = cn
+    ? "添加到主屏幕（iPhone / iPad）"
+    : "Add to Home Screen (iPhone / iPad)";
+  $helpClose.setAttribute("aria-label", cn ? "关闭" : "Close");
+  $helpClose.title = cn ? "关闭" : "Close";
+
+  const steps = HELP_STEPS.map(
+    (s, i) => `
+      <div class="help-step">
+        <p><span class="step-n">${i + 1}</span><span>${cn ? s.cn : s.en}</span></p>
+        <img src="${s.img}" width="${s.w}" height="${s.h}" alt="" />
+      </div>`
+  ).join("");
+
+  const note = cn
+    ? "添加后，请在有网络时打开一次并等待约 15 秒，让经文数据存到设备上；之后即使没有网络也能使用。"
+    : "After adding it, open it once with a connection and wait ~15 seconds while the Bible text is stored on the device — after that it works with no signal.";
+
+  $helpBody.innerHTML = `${steps}<p class="help-note">${note}</p>`;
+}
+
+$helpLink.addEventListener("click", () => {
+  renderHelp();
+  $helpDialog.showModal();
+  $helpBody.scrollTop = 0; // always open on step 1
+});
+$helpClose.addEventListener("click", () => $helpDialog.close());
+// Click outside the panel (i.e. on the backdrop) closes it too.
+$helpDialog.addEventListener("click", (e) => {
+  if (e.target === $helpDialog) $helpDialog.close();
+});
+
 /* ----------------------------- offline ----------------------------- */
 
 /**
@@ -785,6 +856,7 @@ for (const btn of $toggle.querySelectorAll("button")) {
 }
 document.documentElement.lang = lang === "cn" ? "zh" : "en";
 syncBackBtn();
+renderHelp();
 
 const initial = readHash();
 if (initial) {

@@ -27,6 +27,11 @@ const SHELL = [
   "./favicon.svg",
   "./apple-touch-icon.png",
   "./data/books.json",
+  // Screenshots for the "add to Home Screen" walkthrough — small, and the
+  // walkthrough is most useful to someone checking it offline.
+  "./assets/ios-1-more.jpg",
+  "./assets/ios-2-share.jpg",
+  "./assets/ios-3-add.jpg",
 ];
 
 // ~7 MB of verse text (≈3 MB over the wire). Cached separately and
@@ -39,9 +44,11 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open(CACHE);
       await cache.addAll(SHELL);
       // Warm the verse data too, but don't block installation on it — if it
-      // fails the first search will fetch and cache it instead.
+      // fails the first search will fetch and cache it instead. Skipped when
+      // it's already stored, so shipping a new worker doesn't cost the user
+      // another multi-megabyte download; a VERSION bump (new cache) does.
       try {
-        await cache.add(DATA);
+        if (!(await cache.match(DATA))) await cache.add(DATA);
       } catch {}
       await self.skipWaiting();
     })()
