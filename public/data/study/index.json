@@ -1,0 +1,1072 @@
+{
+  "schema": 1,
+  "version": "2026-09-04.2",
+  "layout": "chapter",
+  "kdf": {
+    "salt": "O4Ejv8YHG/DrHe9ZiWqlzA==",
+    "iter": 200000
+  },
+  "verify": {
+    "iv": "rB8T4d5T+y+SIbXI",
+    "ct": "Y1hrmNCngvURbf1IYMrFBE51bWJ+xf6Kl5Cptwn5XP3zYw=="
+  },
+  "books": {
+    "1": {
+      "chapters": 50,
+      "bytes": 1127488,
+      "notes": {
+        "en": 595,
+        "cn": 608
+      },
+      "xrefs": {
+        "en": 1958,
+        "cn": 2084
+      },
+      "unaligned": {
+        "en": 5,
+        "cn": 2
+      }
+    },
+    "2": {
+      "chapters": 40,
+      "bytes": 1297372,
+      "notes": {
+        "en": 631,
+        "cn": 654
+      },
+      "xrefs": {
+        "en": 2422,
+        "cn": 2619
+      },
+      "unaligned": {
+        "en": 8,
+        "cn": 3
+      }
+    },
+    "3": {
+      "chapters": 27,
+      "bytes": 758216,
+      "notes": {
+        "en": 486,
+        "cn": 494
+      },
+      "xrefs": {
+        "en": 1063,
+        "cn": 1169
+      },
+      "unaligned": {
+        "en": 4,
+        "cn": 4
+      }
+    },
+    "4": {
+      "chapters": 36,
+      "bytes": 637808,
+      "notes": {
+        "en": 311,
+        "cn": 321
+      },
+      "xrefs": {
+        "en": 1531,
+        "cn": 1696
+      },
+      "unaligned": {
+        "en": 3,
+        "cn": 1
+      }
+    },
+    "5": {
+      "chapters": 34,
+      "bytes": 491152,
+      "notes": {
+        "en": 192,
+        "cn": 226
+      },
+      "xrefs": {
+        "en": 1694,
+        "cn": 1823
+      },
+      "unaligned": {
+        "en": 5,
+        "cn": 0
+      }
+    },
+    "6": {
+      "chapters": 24,
+      "bytes": 244808,
+      "notes": {
+        "en": 82,
+        "cn": 94
+      },
+      "xrefs": {
+        "en": 849,
+        "cn": 912
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "7": {
+      "chapters": 21,
+      "bytes": 162180,
+      "notes": {
+        "en": 68,
+        "cn": 79
+      },
+      "xrefs": {
+        "en": 558,
+        "cn": 602
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "8": {
+      "chapters": 4,
+      "bytes": 73340,
+      "notes": {
+        "en": 41,
+        "cn": 41
+      },
+      "xrefs": {
+        "en": 69,
+        "cn": 72
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "9": {
+      "chapters": 31,
+      "bytes": 277088,
+      "notes": {
+        "en": 114,
+        "cn": 140
+      },
+      "xrefs": {
+        "en": 748,
+        "cn": 811
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "10": {
+      "chapters": 24,
+      "bytes": 172640,
+      "notes": {
+        "en": 76,
+        "cn": 97
+      },
+      "xrefs": {
+        "en": 491,
+        "cn": 536
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 1
+      }
+    },
+    "11": {
+      "chapters": 22,
+      "bytes": 289688,
+      "notes": {
+        "en": 101,
+        "cn": 119
+      },
+      "xrefs": {
+        "en": 725,
+        "cn": 797
+      },
+      "unaligned": {
+        "en": 2,
+        "cn": 5
+      }
+    },
+    "12": {
+      "chapters": 25,
+      "bytes": 217312,
+      "notes": {
+        "en": 91,
+        "cn": 102
+      },
+      "xrefs": {
+        "en": 709,
+        "cn": 815
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 3
+      }
+    },
+    "13": {
+      "chapters": 29,
+      "bytes": 164496,
+      "notes": {
+        "en": 87,
+        "cn": 94
+      },
+      "xrefs": {
+        "en": 564,
+        "cn": 652
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "14": {
+      "chapters": 36,
+      "bytes": 197372,
+      "notes": {
+        "en": 75,
+        "cn": 89
+      },
+      "xrefs": {
+        "en": 669,
+        "cn": 771
+      },
+      "unaligned": {
+        "en": 3,
+        "cn": 0
+      }
+    },
+    "15": {
+      "chapters": 10,
+      "bytes": 81240,
+      "notes": {
+        "en": 20,
+        "cn": 26
+      },
+      "xrefs": {
+        "en": 226,
+        "cn": 254
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 1
+      }
+    },
+    "16": {
+      "chapters": 13,
+      "bytes": 94360,
+      "notes": {
+        "en": 31,
+        "cn": 37
+      },
+      "xrefs": {
+        "en": 330,
+        "cn": 360
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "17": {
+      "chapters": 10,
+      "bytes": 35556,
+      "notes": {
+        "en": 8,
+        "cn": 14
+      },
+      "xrefs": {
+        "en": 113,
+        "cn": 121
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "18": {
+      "chapters": 42,
+      "bytes": 253204,
+      "notes": {
+        "en": 127,
+        "cn": 155
+      },
+      "xrefs": {
+        "en": 719,
+        "cn": 747
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "19": {
+      "chapters": 150,
+      "bytes": 1232796,
+      "notes": {
+        "en": 637,
+        "cn": 699
+      },
+      "xrefs": {
+        "en": 3442,
+        "cn": 3628
+      },
+      "unaligned": {
+        "en": 7,
+        "cn": 2
+      }
+    },
+    "20": {
+      "chapters": 31,
+      "bytes": 130236,
+      "notes": {
+        "en": 37,
+        "cn": 70
+      },
+      "xrefs": {
+        "en": 518,
+        "cn": 540
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 6
+      }
+    },
+    "21": {
+      "chapters": 12,
+      "bytes": 77324,
+      "notes": {
+        "en": 31,
+        "cn": 39
+      },
+      "xrefs": {
+        "en": 195,
+        "cn": 203
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "22": {
+      "chapters": 8,
+      "bytes": 261724,
+      "notes": {
+        "en": 134,
+        "cn": 138
+      },
+      "xrefs": {
+        "en": 172,
+        "cn": 181
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "23": {
+      "chapters": 66,
+      "bytes": 808308,
+      "notes": {
+        "en": 402,
+        "cn": 473
+      },
+      "xrefs": {
+        "en": 1955,
+        "cn": 2096
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 4
+      }
+    },
+    "24": {
+      "chapters": 52,
+      "bytes": 465956,
+      "notes": {
+        "en": 211,
+        "cn": 241
+      },
+      "xrefs": {
+        "en": 1477,
+        "cn": 1644
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "25": {
+      "chapters": 5,
+      "bytes": 49040,
+      "notes": {
+        "en": 16,
+        "cn": 27
+      },
+      "xrefs": {
+        "en": 133,
+        "cn": 142
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "26": {
+      "chapters": 48,
+      "bytes": 592160,
+      "notes": {
+        "en": 311,
+        "cn": 352
+      },
+      "xrefs": {
+        "en": 1343,
+        "cn": 1423
+      },
+      "unaligned": {
+        "en": 2,
+        "cn": 1
+      }
+    },
+    "27": {
+      "chapters": 12,
+      "bytes": 324492,
+      "notes": {
+        "en": 160,
+        "cn": 166
+      },
+      "xrefs": {
+        "en": 751,
+        "cn": 804
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "28": {
+      "chapters": 14,
+      "bytes": 140580,
+      "notes": {
+        "en": 98,
+        "cn": 105
+      },
+      "xrefs": {
+        "en": 351,
+        "cn": 380
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "29": {
+      "chapters": 3,
+      "bytes": 76524,
+      "notes": {
+        "en": 25,
+        "cn": 27
+      },
+      "xrefs": {
+        "en": 188,
+        "cn": 198
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "30": {
+      "chapters": 9,
+      "bytes": 64628,
+      "notes": {
+        "en": 34,
+        "cn": 39
+      },
+      "xrefs": {
+        "en": 224,
+        "cn": 241
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "31": {
+      "chapters": 1,
+      "bytes": 15476,
+      "notes": {
+        "en": 7,
+        "cn": 8
+      },
+      "xrefs": {
+        "en": 32,
+        "cn": 36
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "32": {
+      "chapters": 4,
+      "bytes": 26768,
+      "notes": {
+        "en": 11,
+        "cn": 15
+      },
+      "xrefs": {
+        "en": 84,
+        "cn": 93
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "33": {
+      "chapters": 7,
+      "bytes": 57340,
+      "notes": {
+        "en": 17,
+        "cn": 30
+      },
+      "xrefs": {
+        "en": 197,
+        "cn": 220
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "34": {
+      "chapters": 3,
+      "bytes": 23796,
+      "notes": {
+        "en": 20,
+        "cn": 21
+      },
+      "xrefs": {
+        "en": 56,
+        "cn": 57
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "35": {
+      "chapters": 3,
+      "bytes": 36748,
+      "notes": {
+        "en": 19,
+        "cn": 25
+      },
+      "xrefs": {
+        "en": 82,
+        "cn": 90
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "36": {
+      "chapters": 3,
+      "bytes": 29360,
+      "notes": {
+        "en": 15,
+        "cn": 16
+      },
+      "xrefs": {
+        "en": 107,
+        "cn": 111
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "37": {
+      "chapters": 2,
+      "bytes": 30260,
+      "notes": {
+        "en": 13,
+        "cn": 13
+      },
+      "xrefs": {
+        "en": 52,
+        "cn": 54
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "38": {
+      "chapters": 14,
+      "bytes": 251464,
+      "notes": {
+        "en": 133,
+        "cn": 145
+      },
+      "xrefs": {
+        "en": 389,
+        "cn": 422
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "39": {
+      "chapters": 4,
+      "bytes": 47092,
+      "notes": {
+        "en": 24,
+        "cn": 25
+      },
+      "xrefs": {
+        "en": 110,
+        "cn": 111
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "40": {
+      "chapters": 28,
+      "bytes": 1492488,
+      "notes": {
+        "en": 1154,
+        "cn": 1193
+      },
+      "xrefs": {
+        "en": 3177,
+        "cn": 3294
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "41": {
+      "chapters": 16,
+      "bytes": 674552,
+      "notes": {
+        "en": 474,
+        "cn": 499
+      },
+      "xrefs": {
+        "en": 1902,
+        "cn": 1986
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "42": {
+      "chapters": 24,
+      "bytes": 915844,
+      "notes": {
+        "en": 722,
+        "cn": 758
+      },
+      "xrefs": {
+        "en": 2857,
+        "cn": 2950
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "43": {
+      "chapters": 21,
+      "bytes": 794112,
+      "notes": {
+        "en": 488,
+        "cn": 507
+      },
+      "xrefs": {
+        "en": 1676,
+        "cn": 1690
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "44": {
+      "chapters": 28,
+      "bytes": 1131960,
+      "notes": {
+        "en": 811,
+        "cn": 843
+      },
+      "xrefs": {
+        "en": 3209,
+        "cn": 3216
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "45": {
+      "chapters": 16,
+      "bytes": 682108,
+      "notes": {
+        "en": 459,
+        "cn": 487
+      },
+      "xrefs": {
+        "en": 1057,
+        "cn": 1058
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "46": {
+      "chapters": 16,
+      "bytes": 891832,
+      "notes": {
+        "en": 611,
+        "cn": 632
+      },
+      "xrefs": {
+        "en": 2127,
+        "cn": 2125
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "47": {
+      "chapters": 13,
+      "bytes": 554224,
+      "notes": {
+        "en": 478,
+        "cn": 486
+      },
+      "xrefs": {
+        "en": 1216,
+        "cn": 1215
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "48": {
+      "chapters": 6,
+      "bytes": 379660,
+      "notes": {
+        "en": 271,
+        "cn": 275
+      },
+      "xrefs": {
+        "en": 894,
+        "cn": 894
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "49": {
+      "chapters": 6,
+      "bytes": 532996,
+      "notes": {
+        "en": 450,
+        "cn": 458
+      },
+      "xrefs": {
+        "en": 849,
+        "cn": 852
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "50": {
+      "chapters": 4,
+      "bytes": 260616,
+      "notes": {
+        "en": 261,
+        "cn": 264
+      },
+      "xrefs": {
+        "en": 416,
+        "cn": 416
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "51": {
+      "chapters": 4,
+      "bytes": 192912,
+      "notes": {
+        "en": 198,
+        "cn": 204
+      },
+      "xrefs": {
+        "en": 362,
+        "cn": 363
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "52": {
+      "chapters": 5,
+      "bytes": 186080,
+      "notes": {
+        "en": 143,
+        "cn": 146
+      },
+      "xrefs": {
+        "en": 503,
+        "cn": 501
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "53": {
+      "chapters": 3,
+      "bytes": 77556,
+      "notes": {
+        "en": 63,
+        "cn": 67
+      },
+      "xrefs": {
+        "en": 189,
+        "cn": 189
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "54": {
+      "chapters": 6,
+      "bytes": 284444,
+      "notes": {
+        "en": 253,
+        "cn": 255
+      },
+      "xrefs": {
+        "en": 670,
+        "cn": 671
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "55": {
+      "chapters": 4,
+      "bytes": 190476,
+      "notes": {
+        "en": 170,
+        "cn": 177
+      },
+      "xrefs": {
+        "en": 524,
+        "cn": 524
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "56": {
+      "chapters": 3,
+      "bytes": 154652,
+      "notes": {
+        "en": 122,
+        "cn": 124
+      },
+      "xrefs": {
+        "en": 332,
+        "cn": 332
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "57": {
+      "chapters": 1,
+      "bytes": 41976,
+      "notes": {
+        "en": 40,
+        "cn": 41
+      },
+      "xrefs": {
+        "en": 82,
+        "cn": 82
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "58": {
+      "chapters": 13,
+      "bytes": 671084,
+      "notes": {
+        "en": 354,
+        "cn": 384
+      },
+      "xrefs": {
+        "en": 1377,
+        "cn": 1380
+      },
+      "unaligned": {
+        "en": 1,
+        "cn": 0
+      }
+    },
+    "59": {
+      "chapters": 5,
+      "bytes": 214820,
+      "notes": {
+        "en": 155,
+        "cn": 161
+      },
+      "xrefs": {
+        "en": 481,
+        "cn": 480
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "60": {
+      "chapters": 5,
+      "bytes": 412028,
+      "notes": {
+        "en": 289,
+        "cn": 298
+      },
+      "xrefs": {
+        "en": 758,
+        "cn": 758
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "61": {
+      "chapters": 3,
+      "bytes": 301724,
+      "notes": {
+        "en": 196,
+        "cn": 198
+      },
+      "xrefs": {
+        "en": 511,
+        "cn": 506
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "62": {
+      "chapters": 5,
+      "bytes": 460700,
+      "notes": {
+        "en": 317,
+        "cn": 324
+      },
+      "xrefs": {
+        "en": 628,
+        "cn": 628
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "63": {
+      "chapters": 1,
+      "bytes": 44720,
+      "notes": {
+        "en": 35,
+        "cn": 34
+      },
+      "xrefs": {
+        "en": 50,
+        "cn": 50
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "64": {
+      "chapters": 1,
+      "bytes": 37200,
+      "notes": {
+        "en": 40,
+        "cn": 42
+      },
+      "xrefs": {
+        "en": 55,
+        "cn": 55
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "65": {
+      "chapters": 1,
+      "bytes": 77504,
+      "notes": {
+        "en": 72,
+        "cn": 70
+      },
+      "xrefs": {
+        "en": 169,
+        "cn": 169
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    },
+    "66": {
+      "chapters": 22,
+      "bytes": 1179628,
+      "notes": {
+        "en": 717,
+        "cn": 761
+      },
+      "xrefs": {
+        "en": 2635,
+        "cn": 2635
+      },
+      "unaligned": {
+        "en": 0,
+        "cn": 0
+      }
+    }
+  },
+  "totalBytes": 24155288
+}
