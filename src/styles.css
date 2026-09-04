@@ -36,7 +36,907 @@
 /* Tailwind's `dark:` variant follows our explicit attribute, not the OS. */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
+:root {
+  --radius: 12px;
+  --maxw: 820px;
+}
+
+/* ===========================================================================
+   Component classes. Ported from the pre-React stylesheet so the look is
+   unchanged; the palette now comes from the `@theme` tokens above (so
+   `bg-bg`, `text-muted`, `border-border`… work alongside these in JSX).
+   =========================================================================== */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------- top bar ---------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px 16px 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+.brand-icon {
+  display: block;
+  flex: none;
+}
+
+.topbar-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-toggle button {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lang-toggle button.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Glyph: moon when dark (click → go light), sun when light (click → go dark). */
+.theme-toggle::before {
+  content: "\1F319"; /* 🌙 */
+}
+
+[data-theme="light"] .theme-toggle::before {
+  content: "\2600"; /* ☀ */
+}
+
+/* Study gate: the Unlock button and the Notes toggle share the top-bar pill. */
+.unlock-btn,
+.notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 7px 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.unlock-btn:hover,
+.notes-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.notes-toggle.active {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ---------------------------- search ---------------------------- */
+
+main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+#search-form {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 0;
+  background: linear-gradient(var(--color-bg) 70%, transparent);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#q {
+  width: 100%;
+  padding: 16px 46px 16px 18px;
+  font-size: 18px;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#q:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+/* hide native search clear control (we provide our own) */
+#q::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.clear-btn:hover {
+  color: var(--color-text);
+  background: var(--color-border);
+}
+
+/* "Back to results" — sits just left of the clear button, shown only while a
+   chapter view is covering an earlier result list. */
+.back-btn {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.back-btn:hover {
+  color: #fff;
+  background: var(--color-accent);
+}
+
+/* keep the text clear of the extra button */
+.search-box.has-back #q {
+  padding-right: 82px;
+}
+
+.status {
+  color: var(--color-muted);
+  font-size: 14px;
+  min-height: 20px;
+  margin: 4px 2px 12px;
+}
+
+/* ---------------------------- results ---------------------------- */
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Compact single-line verse row: [copy] [ref] text. The wide left border
+   leaves room for the selected accent bar without shifting the text. */
+.verse {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.verse:hover {
+  background: var(--color-sel-hover);
+  border-color: var(--color-accent);
+}
+
+.copy-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--color-accent);
+  background: var(--color-panel-2);
+  border-color: var(--color-border);
+}
+
+.copy-btn.copied {
+  color: #2ec27e;
+  border-color: #2ec27e;
+}
+
+.verse .ref {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 6px;
+  padding: 2px 7px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.verse .ref:hover {
+  text-decoration: underline;
+}
+
+.verse .text {
+  flex: 1 1 auto;
+  font-size: 16px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.verse.cn .text {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+/* Selected verse — high-contrast: accent left bar, filled background, ring */
+.verse.selected,
+.chapter-block .verse.selected {
+  background: var(--color-sel-bg);
+  border-color: var(--color-accent);
+  border-left-color: var(--color-accent);
+  box-shadow: inset 3px 0 0 0 var(--color-accent), 0 0 0 1px var(--color-accent);
+}
+
+.verse.selected:hover {
+  background: var(--color-sel-bg);
+}
+
+/* turn the copy button into a solid accent chip when its row is selected */
+.verse.selected .copy-btn {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.verse.selected .ref {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* brief pulse the moment a verse is selected, for clear click feedback */
+@keyframes verse-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.012);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.verse.just-selected {
+  animation: verse-pop 0.22s ease-out;
+}
+
+/* Verse the chapter view jumped to — fades out so the eye finds it, then
+   leaves the chapter reading cleanly. */
+@keyframes verse-focus-fade {
+  0%,
+  55% {
+    background: var(--color-accent-soft);
+    box-shadow: inset 3px 0 0 0 var(--color-accent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.chapter-block .verse.focused {
+  animation: verse-focus-fade 2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-block .verse.focused {
+    animation: none;
+    background: var(--color-accent-soft);
+  }
+}
+
+.verse mark {
+  background: var(--color-mark);
+  color: #1a1d24;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.verse .alt-note {
+  font-size: 12px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.fuzzy-chapter .text.muted {
+  color: var(--color-muted);
+  font-size: 14px;
+  cursor: default;
+}
+
+/* ---------------------------- chapter view ---------------------------- */
+
+.chapter-block {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.chapter-block .verse {
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 6px;
+  background: transparent;
+}
+
+.chapter-block .verse:hover {
+  background: var(--color-panel-2);
+}
+
+.chapter-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-muted);
+  padding: 6px 6px 10px;
+}
+
+.chapter-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-border);
+  border-color: var(--color-accent);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.il-toggle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.il-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.il-toggle.active {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.chapter-block .verse .vnum {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 12px;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+/* ---- Interlinear verse layout (EN line above CN line) ---- */
+.verse.interlinear {
+  align-items: flex-start;
+}
+
+.verse.interlinear .il-stack {
+  display: flex;
+  gap: 8px;
+}
+
+.verse.interlinear .vnum {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.il-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.il-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.il-line .il-text {
+  font-size: 15.5px;
+}
+
+.il-line.cn .il-text {
+  font-size: 16.5px;
+  line-height: 1.7;
+}
+
+.il-line.cn {
+  padding-bottom: 2px;
+}
+
+/* ---------------------------- empty states ---------------------------- */
+
+.empty,
+.loading {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.hint {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 36px 16px;
+  font-size: 15px;
+}
+
+.hint code {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--color-text);
+}
+
+/* ---------------------------- footer ---------------------------- */
+
+.foot {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.foot a {
+  color: var(--color-accent);
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* A footer entry that acts as a link but is a button (it opens a dialog). */
+.link-btn {
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  filter: brightness(1.15);
+}
+
+/* ---- Dialogs: "Add to Home Screen" walkthrough and the unlock prompt ---- */
+.help-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: 85vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* Only while open — a bare `display: flex` would defeat dialog's own hiding. */
+.help-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.help-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.help-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* the round × reuses .clear-btn's look, but in flow rather than absolute */
+.help-close {
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+}
+
+.help-body {
+  flex: 1 1 auto;
+  min-height: 0; /* let it shrink so the scroll happens here, not on the page */
+  padding: 4px 16px 20px;
+  overflow-y: auto;
+  overflow-anchor: none; /* image loads must not shift the reading position */
+  -webkit-overflow-scrolling: touch;
+}
+
+.help-step {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-step:last-of-type {
+  border-bottom: 0;
+}
+
+.help-step p {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.help-step .step-n {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-accent);
+  border-radius: 50%;
+  transform: translateY(2px);
+}
+
+.help-step img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #000;
+}
+
+.help-note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border-radius: 10px;
+}
+
+/* ---- Unlock dialog ---- */
+.unlock-dialog {
+  width: min(380px, calc(100vw - 32px));
+}
+
+.unlock-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unlock-label {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.pw-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pw-field input {
+  width: 100%;
+  padding: 12px 44px 12px 14px;
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pw-field input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.pw-reveal {
+  position: absolute;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pw-reveal:hover {
+  background: var(--color-border);
+}
+
+.unlock-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: #ff6b6b;
+}
+
+.unlock-submit {
+  margin-top: 4px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.unlock-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.unlock-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---------------------------- floating bits ---------------------------- */
+
+/* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+.deselect-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.deselect-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* "More results" button under keyword search results */
+.more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.more-btn:hover {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 480px) {
+  #q {
+    font-size: 16px;
+  }
+  .verse {
+    flex-wrap: wrap;
+  }
+  .verse .text {
+    font-size: 15px;
+    flex-basis: 100%;
+  }
+  /* The top bar gained the study-gate pill, so tighten everything to keep the
+     row on one line at 375 px. */
+  .topbar {
+    gap: 8px;
+    padding: 14px 12px 6px;
+  }
+  .brand {
+    font-size: 17px;
+    gap: 6px;
+  }
+  .brand-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .topbar-tools {
+    gap: 6px;
+  }
+  .lang-toggle button {
+    padding: 7px 9px;
+    font-size: 13px;
+  }
+  .unlock-btn,
+  .notes-toggle {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
 }

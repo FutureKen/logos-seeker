@@ -45,6 +45,23 @@ describe("mapOffsets", () => {
     expect(dst.slice(3, 6)).toBe("bcd");
   });
 
+  it("maps Gen 1:29 across the English revision in verses.json", () => {
+    // The EPUB is the 2005 text; verses.json is newer ("that produces" →
+    // "yielding"), so the markers have to be diffed onto the newer string.
+    const epub =
+      "And God said, Behold, I have given you every herb that produces seed that is on the surface of all the earth and every tree which has fruit that produces seed; they shall be for you as food.";
+    const json =
+      "And God said, Behold, I have given you every herb yielding seed that is on the surface of all the earth and every tree which has fruit yielding seed; it shall be for you as food.";
+    const [which, food] = mapOffsets(epub, json, [epub.indexOf("which"), epub.indexOf("food")]);
+    expect(json.slice(which.pos, which.pos + 5)).toBe("which");
+    expect(json.slice(food.pos, food.pos + 4)).toBe("food");
+    // A marker anchored on a word the revision dropped has no position at all.
+    expect(mapOffsets(epub, json, [epub.indexOf("produces")])[0]).toEqual({
+      pos: null,
+      how: "none",
+    });
+  });
+
   it("passes null offsets through", () => {
     expect(mapOffsets(s, s, [null])).toEqual([{ pos: null, how: "none" }]);
   });
