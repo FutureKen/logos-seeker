@@ -7,16 +7,16 @@
   "module": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./data/books.json": "./data/books.json",
-    "./data/verses.json": "./data/verses.json",
+    "./data/books.json": "./public/data/books.json",
+    "./data/verses.json": "./public/data/verses.json",
     "./package.json": "./package.json"
   },
   "files": [
     "src/index.js",
     "src/search.js",
     "src/parseQuery.js",
-    "data/books.json",
-    "data/verses.json"
+    "public/data/books.json",
+    "public/data/verses.json"
   ],
   "sideEffects": false,
   "keywords": [
@@ -38,7 +38,31 @@
   },
   "author": "FutureKen",
   "scripts": {
-    "serve": "npx --yes serve@latest -l 5050 ."
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "study:en": "node scripts/build-study-en.mjs",
+    "study:fetch": "node scripts/fetch-rcv-tw.mjs",
+    "study:cn": "node scripts/build-study-cn.mjs",
+    "study:index": "node scripts/build-study-index.mjs",
+    "study:validate": "node scripts/validate-study.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "jsdom": "30.0.1",
+    "tailwindcss": "4.3.3",
+    "vite": "8.2.2",
+    "vite-plugin-pwa": "1.3.0",
+    "vitest": "5.0.0"
+  }
 }

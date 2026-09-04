@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Dark is the default palette; `[data-theme="light"]` overrides it. The
+   theme attribute is set before first paint by the inline script in
+   index.html, so there is no flash of the wrong mode. */
+@theme {
+  --color-bg: #0f1115;
+  --color-panel: #171a21;
+  --color-panel-2: #1d212b;
+  --color-text: #e6e8ee;
+  --color-muted: #97a0b0;
+  --color-accent: #6ea8fe;
+  --color-accent-soft: #25406e;
+  --color-sel-bg: #1c3357;
+  --color-sel-hover: #1a2230;
+  --color-mark: #ffd66e;
+  --color-border: #2a2f3a;
+  --color-otl: #c9a86a;
+}
+
+[data-theme="light"] {
+  --color-bg: #f6f7f9;
+  --color-panel: #ffffff;
+  --color-panel-2: #f0f2f6;
+  --color-text: #1a1d24;
+  --color-muted: #5c6573;
+  --color-accent: #2f6fed;
+  --color-accent-soft: #d7e3ff;
+  --color-sel-bg: #dbe7ff;
+  --color-sel-hover: #eef2f8;
+  --color-mark: #ffe08a;
+  --color-border: #e1e5ec;
+  --color-otl: #8a6d2b;
+}
+
+/* Tailwind's `dark:` variant follows our explicit attribute, not the OS. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}

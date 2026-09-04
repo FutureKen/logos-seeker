@@ -58,21 +58,44 @@ data/books.json  ─┼─► index.html + src/*.js  (browser app)
   token inverted index and a Chinese bigram index (built lazily in the browser).
 - **`src/app.js`** is the vanilla-JS UI (no framework, native ES modules).
 
-## Run locally
+## Development
+
+The app is a **Vite + React + Tailwind v4** PWA. The verse data lives in
+`public/data/` and is copied to `dist/` verbatim by the build.
 
 ```bash
-npm run serve          # serve the static site at http://localhost:5050
+npm install
+npm run dev            # dev server on http://localhost:5173
+npm run build          # production build into dist/ (incl. the generated service worker)
+npm run preview        # serve dist/ locally
+npm test               # vitest (run once)
+npm run test:watch     # vitest in watch mode
 ```
 
-Any static file server works (e.g. `python -m http.server`). Then open the page
-in a browser. No build step is required — the data is committed as JSON.
+Tests live in `tests/` (vitest, jsdom). `tests/search.test.js` stubs `fetch` so
+the search engine runs against the committed JSON.
 
-### Tests
+## Study data
+
+The Recovery Version study apparatus (footnotes, cross-references, outlines and
+book info) is built by the scripts under `scripts/` into
+`public/data/study/**`, one file per book plus one per chapter. Files are
+**encrypted at rest** (AES-GCM, key derived from a password with PBKDF2), so the
+password is supplied to the build via `STUDY_PASSWORD` and never committed.
 
 ```bash
-node scripts/test-parse.mjs    # reference-parsing assertions
-node scripts/test-search.mjs   # search-engine assertions (uses local data)
+npm run study:en -- --book 1       # English half, from the EPUB
+npm run study:fetch -- --book 1    # cache the Chinese API responses
+npm run study:cn -- --book 1       # Chinese half
+npm run study:index                # (re)write data/study/index.json
+npm run study:validate -- --book 1 # schema + QA table; exit 1 on errors
+npm run study:validate -- --fixtures   # validate the hand-written fixtures
 ```
+
+The contract those files must satisfy is codified in `scripts/lib/schema.mjs`,
+with hand-written, **decrypted** fixtures for Genesis 1:1–3 under
+`scripts/fixtures/study/1/`. The browser reads the same files through
+`src/study/studyStore.js`.
 
 ## Use as a library (npm)
 
