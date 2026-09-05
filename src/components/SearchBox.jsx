@@ -37,6 +37,10 @@ export default function SearchBox() {
     inputRef.current?.focus();
   }
 
+  // The arrow goes back one step: to the chapter we came from, or to the list.
+  const top = state.navStack[state.navStack.length - 1];
+  const backLabel = top?.view?.kind === "chapter" ? t.backChapter : t.back;
+
   return (
     <form id="search-form" autoComplete="off" onSubmit={onSubmit}>
       <div className={`search-box${hasBack ? " has-back" : ""}`}>
@@ -61,8 +65,8 @@ export default function SearchBox() {
             id="back-to-results"
             type="button"
             className="back-btn"
-            aria-label={t.back}
-            title={t.back}
+            aria-label={backLabel}
+            title={backLabel}
             onClick={actions.back}
           >
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">

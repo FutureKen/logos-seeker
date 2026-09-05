@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import AppProvider, { useApp } from "./state/AppProvider.jsx";
 import { useBible } from "./hooks/useBible.js";
 import { useHashQuery } from "./hooks/useHashQuery.js";
 import { readLS, writeLS } from "./hooks/useLocalStorage.js";
+import { useStudyChapter } from "./hooks/useStudyChapter.js";
+import { useStudyBook } from "./hooks/useStudyBook.js";
 import { checkVerify, importKey } from "./study/studyCrypto.js";
 import { COL } from "./search.js";
 import { tr } from "./lib/i18n.js";
-import { verseToText, writeClipboard } from "./lib/format.js";
+import { textFor, verseToText, writeClipboard } from "./lib/format.js";
 import TopBar from "./components/TopBar.jsx";
 import SearchBox from "./components/SearchBox.jsx";
 import StatusLine from "./components/StatusLine.jsx";
 import Results from "./components/Results.jsx";
 import ChapterView from "./components/ChapterView.jsx";
+import StudySheet from "./components/StudySheet.jsx";
 import DeselectButton from "./components/DeselectButton.jsx";
 import Footer from "./components/Footer.jsx";
 
@@ -185,6 +188,63 @@ function Shell() {
     };
   }, [bs, ready, chapterRef]);
 
+  /* -------------------------- the study apparatus -------------------------- */
+  // Nothing here fetches until the data is unlocked *and* the Notes toggle is
+  // on, so the locked app is exactly the text-only app.
+  const studyOn = state.unlocked && state.study && chapterRef != null;
+  const chapterStudy = useStudyChapter(
+    chapterRef?.book ?? null,
+    chapterRef?.chapter ?? null,
+    studyOn,
+  );
+  const bookStudy = useStudyBook(chapterRef?.book ?? null, studyOn);
+  const [sheet, setSheet] = useState({ open: false, request: null });
+
+  const studyState = !studyOn
+    ? "off"
+    : chapterStudy.status === "error"
+      ? "error"
+      : chapterStudy.status === "loading" || bookStudy.status === "loading"
+        ? "loading"
+        : chapterStudy.status;
+
+  // The sheet shows the verse itself above its notes, and a `{note}` link can
+  // point at any chapter, so it needs a way to look up verse text on demand.
+  const getVerseText = useCallback(
+    (b, c, v, l) => {
+      const i = bs.refMap?.get(`${b}:${c}:${v}`);
+      if (i == null) return "";
+      return textFor(bs.verses[i], l);
+    },
+    [bs],
+  );
+
+  /**
+   * A reference link (note, cross-reference, outline entry, book info): close
+   * the sheet, remember where we are, and land on the target verse. A
+   * chapter-only reference lands at the top of the chapter, i.e. on verse 1.
+   */
+  const goto = useCallback(
+    (ref) => {
+      if (!Array.isArray(ref)) return;
+      setSheet((s) => (s.open ? { ...s, open: false } : s));
+      const [b, c, v] = ref;
+      let focusVerse = v || null;
+      if (bs.refMap) {
+        if (focusVerse != null && bs.refMap.get(`${b}:${c}:${v}`) == null) focusVerse = null;
+        if (
+          focusVerse == null &&
+          bs.refMap.get(`${b}:${c}:1`) == null &&
+          bs.refMap.get(`${b}:${c}:0`) == null
+        ) {
+          return; // no such chapter — better to stay put than to blank the view
+        }
+      }
+      actions.openChapter({ book: b, chapter: c, focusVerse, scroll: "verse", push: true });
+    },
+    [bs, actions],
+  );
+
   const goSibling = useCallback(
     (rowIdx) => {
       if (rowIdx == null) return;
@@ -269,15 +329,12 @@ function Shell() {
               onPrev={() => goSibling(chapterData.prevRow)}
               onNext={() => goSibling(chapterData.nextRow)}
               onToggleInterlinear={actions.toggleInterlinear}
-              onGoto={(ref) =>
-                actions.openChapter({
-                  book: ref[0],
-                  chapter: ref[1],
-                  focusVerse: ref[2] || null,
-                  scroll: "verse",
-                  push: true,
-                })
-              }
+              onGoto={goto}
+              study={studyOn}
+              studyState={studyState}
+              chapterStudy={chapterStudy.data}
+              bookStudy={bookStudy.data}
+              onOpenSheet={(request) => setSheet({ open: true, request })}
             />
           ) : (
             <Results
@@ -298,6 +355,17 @@ function Shell() {
           )}
         </div>
       </main>
+      {state.unlocked && state.study ? (
+        <StudySheet
+          open={sheet.open}
+          request={sheet.request}
+          lang={state.lang}
+          bookByIdx={bs.bookByIdx}
+          getVerseText={getVerseText}
+          onClose={() => setSheet((s) => ({ ...s, open: false }))}
+          onGoto={goto}
+        />
+      ) : null}
       <DeselectButton />
       <Footer />
     </>

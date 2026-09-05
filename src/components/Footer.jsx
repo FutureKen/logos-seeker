@@ -1,5 +1,6 @@
 import { useState } from "react";
 import InstallHelp from "./InstallHelp.jsx";
+import DownloadStudy from "./DownloadStudy.jsx";
 import { useApp } from "../state/AppProvider.jsx";
 import { writeLS } from "../hooks/useLocalStorage.js";
 import { tr } from "../lib/i18n.js";
@@ -30,6 +31,8 @@ export default function Footer() {
         </span>
         <span className="muted">Static &amp; offline after first load</span>
         <span className="muted">For personal use only.</span>
+        {state.unlocked ? <span className="muted">{t.attribution}</span> : null}
+        <DownloadStudy />
         {state.unlocked ? (
           <button type="button" className="link-btn" onClick={lock}>
             {t.lock}
