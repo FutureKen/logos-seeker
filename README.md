@@ -39,24 +39,48 @@ entirely in the browser — host it on GitHub Pages with no backend.
 - **Clear quickly** — an **✕** button in the search box, or press **Esc**, clears it.
 - **Shareable URLs** — every search updates the URL hash (`#q=John+1:1`).
 - **Offline after first load** — the verse data loads once, then search is local.
+- **Study apparatus (Unlock)** — the **Unlock** button in the top bar asks for a
+  password; once unlocked, a **Notes / 注解** toggle adds the Recovery Version
+  study apparatus to the chapter view:
+  - **Footnotes** — superscript numbers in the verse text (English and Chinese);
+    tap one to read that note.
+  - **Cross-references** — superscript letters; tap one for the reference list.
+  - **Verse sheet** — tap a verse number to see *all* notes and cross-references
+    of that verse in one dialog (a bottom sheet on phones). Every reference in a
+    note is a link that opens that chapter; the back arrow returns to where you
+    were.
+  - **Outlines** — section headings inline above the verses (and mid-verse where
+    a section starts halfway), plus the whole-book outline in the sheet's
+    **Outline** tab.
+  - **Book info** — author, time and place of writing, period covered, recipients
+    and subject, shown above chapter 1 and in the **Book** tab.
+  - **Download for offline** — a footer button stores every chapter's notes on
+    the device (≈ 23 MB).
+
+  The study data is encrypted at rest; without the password the app is the
+  text-only Bible.
 
 ## How it works
 
 ```
-data/verses.json ─┐
-data/books.json  ─┼─► index.html + src/*.js  (browser app)
-                  ┘
+public/data/verses.json ─┐
+public/data/books.json  ─┼─► src/search.js + src/parseQuery.js ─► React UI (src/components)
+public/data/study/**    ─┘   (encrypted; decrypted in the browser after Unlock)
 ```
 
-- **`data/verses.json`** holds the aligned bilingual text — English is the master
+- **`public/data/verses.json`** holds the aligned bilingual text — English is the master
   spine (**31,102 verses**, the canonical count) with the Chinese for each verse
-  alongside it. **`data/books.json`** holds per-book metadata and the reference
+  alongside it. **`public/data/books.json`** holds per-book metadata and the reference
   alias table.
 - **`src/parseQuery.js`** classifies a query as a reference or a word search and
   parses references against a per-book alias table.
 - **`src/search.js`** does O(1) reference lookup and word search via an English
   token inverted index and a Chinese bigram index (built lazily in the browser).
-- **`src/app.js`** is the vanilla-JS UI (no framework, native ES modules).
+- **`src/components/`** is the React UI (Vite + Tailwind v4); `src/state/` holds
+  the app state, `src/study/` the study-data store, decryption and text
+  splitting, and `src/hooks/` the data-loading hooks.
+- **`public/data/study/`** holds the study apparatus, one encrypted file per
+  chapter plus one per book (see *Study data* below).
 
 ## Development
 
@@ -96,6 +120,11 @@ The contract those files must satisfy is codified in `scripts/lib/schema.mjs`,
 with hand-written, **decrypted** fixtures for Genesis 1:1–3 under
 `scripts/fixtures/study/1/`. The browser reads the same files through
 `src/study/studyStore.js`.
+
+### Licensing note
+
+The verse text and the study apparatus are © Living Stream Ministry. This
+project is for personal use; the study data is not part of the npm package.
 
 ## Use as a library (npm)
 
