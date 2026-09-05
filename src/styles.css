@@ -1426,6 +1426,178 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* ------------------------------- book menu ------------------------------- */
+
+/* Sits inside the brand, left of the icon, so it reads as "open the Bible". */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.menu-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.book-menu {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
+  width: min(600px, calc(100vw - 32px));
+  max-height: 82vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.book-menu[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.book-menu::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.bm-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.bm-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* The chapter step reuses the section heading, so it sticks like the others. */
+.bm-book-name {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.bm-back {
+  font-size: 13px;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bm-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 12px 14px;
+  overscroll-behavior: contain;
+}
+
+.bm-status {
+  color: var(--color-muted);
+  font-size: 13px;
+  padding: 12px 2px;
+}
+
+.bm-section-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 10px 2px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--color-muted);
+  background: var(--color-panel);
+}
+
+.bm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.bm-book {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 7px;
+  text-align: left;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.bm-book:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.bm-book-title {
+  font-size: 13px;
+  line-height: 1.25;
+  /* Long English names ("1 Thessalonians") wrap to a second line at a word
+     boundary rather than being cut off; the grid row stretches every card to
+     match, so the columns stay even. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.bm-book-ch {
+  font-size: 11px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bm-chapters {
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  padding-top: 8px;
+}
+
+.bm-chapter {
+  padding: 8px 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.bm-chapter:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 /* ---- phone: the sheet becomes a bottom sheet ---- */
 
 @media (max-width: 640px) {
@@ -1441,6 +1613,21 @@ main {
   .sheet-body {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
+  .book-menu {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 88vh;
+    margin: auto auto 0;
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    animation: sheet-up 0.22s ease-out;
+  }
+  .bm-body {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .bm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
 }
 
 @keyframes sheet-up {
@@ -1455,7 +1642,8 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .study-sheet {
+  .study-sheet,
+  .book-menu {
     animation: none;
   }
 }
