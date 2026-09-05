@@ -655,6 +655,9 @@ main {
 
 /* ---- Dialogs: "Add to Home Screen" walkthrough and the unlock prompt ---- */
 .help-dialog {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
   width: min(440px, calc(100vw - 32px));
   max-height: 85vh;
   padding: 0;
@@ -1159,6 +1162,9 @@ main {
 /* ---- the study sheet ---- */
 
 .study-sheet {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
   width: min(640px, calc(100vw - 32px));
   max-height: 85vh;
   padding: 0;
