@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import App from "../../src/App.jsx";
 import VerseText from "../../src/components/VerseText.jsx";
 import BookInfoCard from "../../src/components/BookInfoCard.jsx";
@@ -358,7 +358,8 @@ describe("study sheet", () => {
     await waitFor(() => expect(sheet().open).toBe(true));
     expect(cards()[1].textContent).toContain("Placeholder note text for marker 2");
 
-    fireEvent.click(screen.getByRole("button", { name: "中" }));
+    // Scoped to the sheet: the top bar has a 中 button of its own.
+    fireEvent.click(within(sheet()).getByRole("button", { name: "中" }));
     await waitFor(() => expect(cards()[1].textContent).toContain("占位注解二"));
     // The chapter underneath is still English.
     expect(verseEl(1).textContent).toContain("God created the heavens and the earth.");

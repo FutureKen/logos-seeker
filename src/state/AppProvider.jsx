@@ -8,6 +8,7 @@ import {
 } from "react";
 import { StudyStore } from "../study/studyStore.js";
 import { readLS, writeLS } from "../hooks/useLocalStorage.js";
+import { SIZE, clampSize, defaultScheme, isFont, isScheme } from "../lib/style.js";
 import { parseHash } from "../hooks/useHashQuery.js";
 
 /** Keyword matches revealed per "More results" click. */
@@ -24,23 +25,31 @@ export const PAGE_SIZE = 20;
 
 const AppContext = createContext(null);
 
-function initialTheme() {
+/**
+ * The colour scheme to start from: the one the reader picked, else whatever the
+ * pre-paint script in index.html already put on the page, else the default for
+ * the OS setting (sepia in a light environment).
+ */
+function initialScheme() {
   const saved = readLS("ls-theme");
-  if (saved === "light" || saved === "dark") return { theme: saved, explicit: true };
+  if (isScheme(saved)) return { scheme: saved, explicit: true };
   const attr = globalThis.document?.documentElement?.getAttribute("data-theme");
-  if (attr === "light" || attr === "dark") return { theme: attr, explicit: false };
+  if (isScheme(attr)) return { scheme: attr, explicit: false };
   const light = globalThis.matchMedia?.("(prefers-color-scheme: light)")?.matches;
-  return { theme: light ? "light" : "dark", explicit: false };
+  return { scheme: defaultScheme(light), explicit: false };
 }
 
 export function initState() {
-  const { theme, explicit } = initialTheme();
+  const { scheme, explicit } = initialScheme();
+  const savedFont = readLS("ls-font");
   const hash = parseHash(globalThis.location?.hash ?? "");
   const query = hash.kind === "q" ? hash.query : "";
   return {
     lang: readLS("ls-lang") === "cn" ? "cn" : "en",
-    theme,
-    themeExplicit: explicit,
+    scheme,
+    schemeExplicit: explicit,
+    font: isFont(savedFont) ? savedFont : "system",
+    fontSize: clampSize(readLS("ls-font-size") ?? SIZE.default),
     interlinear: readLS("ls-interlinear") === "1",
     /** The Notes toggle. Only meaningful once `unlocked`. */
     study: readLS("ls-study") === "1",
@@ -97,8 +106,16 @@ export function reducer(state, a) {
       if (a.lang !== "en" && a.lang !== "cn") return state;
       return { ...state, lang: a.lang };
 
-    case "theme":
-      return { ...state, theme: a.theme, themeExplicit: a.explicit !== false };
+    case "scheme":
+      if (!isScheme(a.scheme)) return state;
+      return { ...state, scheme: a.scheme, schemeExplicit: a.explicit !== false };
+
+    case "font":
+      if (!isFont(a.font)) return state;
+      return { ...state, font: a.font };
+
+    case "font-size":
+      return { ...state, fontSize: clampSize(a.size) };
 
     case "interlinear":
       return { ...state, interlinear: a.value ?? !state.interlinear };
@@ -187,16 +204,9 @@ export function AppProvider({ children, initial }) {
       setInput: (input) => dispatch({ type: "input", input }),
       search: (query, extra) => dispatch({ type: "search", query, ...extra }),
       setLang: (lang) => dispatch({ type: "lang", lang }),
-      setTheme: (theme, explicit = true) => dispatch({ type: "theme", theme, explicit }),
-      toggleTheme: () =>
-        dispatch({
-          type: "theme",
-          theme:
-            document.documentElement.getAttribute("data-theme") === "light"
-              ? "dark"
-              : "light",
-          explicit: true,
-        }),
+      setScheme: (scheme, explicit = true) => dispatch({ type: "scheme", scheme, explicit }),
+      setFont: (font) => dispatch({ type: "font", font }),
+      setFontSize: (size) => dispatch({ type: "font-size", size }),
       setInterlinear: (value) => dispatch({ type: "interlinear", value }),
       toggleInterlinear: () => dispatch({ type: "interlinear" }),
       setStudy: (value) => dispatch({ type: "study", value }),
@@ -221,11 +231,26 @@ export function AppProvider({ children, initial }) {
   }, [state.lang]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", state.theme);
+    const root = document.documentElement;
+    root.setAttribute("data-theme", state.scheme);
+    // Keep the browser/status-bar colour on the scheme the page is painted in.
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const bg = getComputedStyle(root).getPropertyValue("--color-bg").trim();
+    if (meta && bg) meta.setAttribute("content", bg);
     // Only an explicit choice is remembered, so an unset preference keeps
     // following the OS.
-    if (state.themeExplicit) writeLS("ls-theme", state.theme);
-  }, [state.theme, state.themeExplicit]);
+    if (state.schemeExplicit) writeLS("ls-theme", state.scheme);
+  }, [state.scheme, state.schemeExplicit]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-font", state.font);
+    writeLS("ls-font", state.font);
+  }, [state.font]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--reading-size", `${state.fontSize}px`);
+    writeLS("ls-font-size", String(state.fontSize));
+  }, [state.fontSize]);
 
   useEffect(() => {
     writeLS("ls-interlinear", state.interlinear ? "1" : "0");
@@ -235,16 +260,16 @@ export function AppProvider({ children, initial }) {
     writeLS("ls-study", state.study ? "1" : "0");
   }, [state.study]);
 
-  // Follow the OS theme while the user has not picked one explicitly.
+  // Follow the OS setting while the reader has not picked a scheme explicitly.
   useEffect(() => {
-    if (state.themeExplicit) return;
+    if (state.schemeExplicit) return;
     const mq = window.matchMedia?.("(prefers-color-scheme: light)");
     if (!mq?.addEventListener) return;
     const onChange = (e) =>
-      dispatch({ type: "theme", theme: e.matches ? "light" : "dark", explicit: false });
+      dispatch({ type: "scheme", scheme: defaultScheme(e.matches), explicit: false });
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, [state.themeExplicit]);
+  }, [state.schemeExplicit]);
 
   const value = useMemo(
     () => ({ state, dispatch, actions, store }),

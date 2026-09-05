@@ -15,18 +15,36 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Logos Seeker" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)" />
-    <!-- Set the theme before first paint to avoid a flash of the wrong mode. -->
+<!-- Kept in step with the chosen colour scheme by AppProvider. -->
+    <meta name="theme-color" content="#0f1115" />
+    <!-- Apply the saved reading style before first paint, so there is no flash
+         of the wrong colours, typeface or text size. The palettes and font
+         stacks live in styles.css, keyed by these two attributes. -->
     <script>
       (function () {
-        var t = localStorage.getItem("ls-theme");
-        if (t !== "light" && t !== "dark") {
+        var root = document.documentElement;
+        var get = function (k) {
+          try {
+            return localStorage.getItem(k);
+          } catch (e) {
+            return null;
+          }
+        };
+        var schemes = ["light", "sepia", "gray", "dark", "black"];
+        var t = get("ls-theme");
+        if (schemes.indexOf(t) < 0) {
           t = window.matchMedia("(prefers-color-scheme: light)").matches
-            ? "light"
+            ? "sepia"
             : "dark";
         }
-        document.documentElement.setAttribute("data-theme", t);
+        root.setAttribute("data-theme", t);
+
+        var fonts = ["system", "serif", "sans", "book", "kai"];
+        var f = get("ls-font");
+        root.setAttribute("data-font", fonts.indexOf(f) < 0 ? "system" : f);
+
+        var s = parseInt(get("ls-font-size"), 10);
+        if (s >= 14 && s <= 24) root.style.setProperty("--reading-size", s + "px");
       })();
     </script>
   </head>

@@ -237,7 +237,7 @@ describe("preferences", () => {
     search("John 1:1");
     await waitFor(() => expect(status()).toBe("1 result"));
 
-    fireEvent.click(screen.getByRole("button", { name: "中文" }));
+    fireEvent.click(screen.getByRole("button", { name: "中" }));
     await waitFor(() => expect(localStorage.getItem("ls-lang")).toBe("cn"));
     expect(document.documentElement.lang).toBe("zh");
     expect(status()).toBe("共 1 处匹配");
@@ -251,13 +251,12 @@ describe("preferences", () => {
     expect(status()).toMatch(/^显示 \d+ \/ 共 \d+ 处匹配$/);
   });
 
-  it("the theme toggle flips and persists", async () => {
+  it("the reading style opens from the top bar and persists a scheme", async () => {
     render(<App />);
-    const before = document.documentElement.getAttribute("data-theme");
-    fireEvent.click(screen.getByRole("button", { name: /Switch to (dark|light) mode/ }));
-    const after = document.documentElement.getAttribute("data-theme");
-    expect(after).not.toBe(before);
-    await waitFor(() => expect(localStorage.getItem("ls-theme")).toBe(after));
+    fireEvent.click(screen.getByRole("button", { name: "Reading style" }));
+    fireEvent.click(screen.getByRole("button", { name: /Sepia/ }));
+    expect(document.documentElement.getAttribute("data-theme")).toBe("sepia");
+    await waitFor(() => expect(localStorage.getItem("ls-theme")).toBe("sepia"));
   });
 
   it("the install walkthrough opens from the footer", () => {

@@ -1,7 +1,7 @@
 import { useApp } from "../state/AppProvider.jsx";
 import { tr } from "../lib/i18n.js";
 
-/** EN / 中文 display-language switch. */
+/** EN / 中 display-language switch. */
 export default function LangToggle() {
   const { state, actions } = useApp();
   const t = tr(state.lang);
@@ -9,7 +9,7 @@ export default function LangToggle() {
     <div className="lang-toggle" role="group" aria-label={t.langGroup}>
       {[
         ["en", "EN"],
-        ["cn", "中文"],
+        ["cn", "中"],
       ].map(([code, label]) => (
         <button
           key={code}

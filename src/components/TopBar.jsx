@@ -1,7 +1,7 @@
 import { useState } from "react";
 import BookMenu from "./BookMenu.jsx";
 import LangToggle from "./LangToggle.jsx";
-import ThemeToggle from "./ThemeToggle.jsx";
+import StyleDialog from "./StyleDialog.jsx";
 import UnlockButton from "./UnlockButton.jsx";
 import NotesToggle from "./NotesToggle.jsx";
 import { useApp } from "../state/AppProvider.jsx";
@@ -9,12 +9,13 @@ import { tr } from "../lib/i18n.js";
 
 /**
  * The book menu, the brand, the language switch, the study gate slot and the
- * theme switch.
+ * reading-style button.
  */
 export default function TopBar() {
   const { state } = useApp();
   const t = tr(state.lang);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false);
   return (
     <header className="topbar">
       <h1 className="brand">
@@ -45,14 +46,26 @@ export default function TopBar() {
           width="28"
           height="28"
         />
-        Logos&nbsp;Seeker
+        <span className="brand-name">Logos&nbsp;Seeker</span>
       </h1>
       <div className="topbar-tools">
         <LangToggle />
         {state.unlocked ? <NotesToggle /> : <UnlockButton />}
-        <ThemeToggle />
+        <button
+          type="button"
+          id="style-btn"
+          className="style-btn"
+          aria-label={t.styleTitle}
+          aria-haspopup="dialog"
+          aria-expanded={styleOpen}
+          title={t.styleTitle}
+          onClick={() => setStyleOpen(true)}
+        >
+          Aa
+        </button>
       </div>
       <BookMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <StyleDialog open={styleOpen} onClose={() => setStyleOpen(false)} />
     </header>
   );
 }
