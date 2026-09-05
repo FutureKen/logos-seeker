@@ -4,6 +4,8 @@ import { useStudyBook } from "../hooks/useStudyBook.js";
 import { formatRef } from "../study/refFormat.js";
 import { tr } from "../lib/i18n.js";
 import RichText from "./RichText.jsx";
+import RefTooltip from "./RefTooltip.jsx";
+import { refAttr } from "../study/refText.js";
 import VerseText from "./VerseText.jsx";
 import BookInfoCard from "./BookInfoCard.jsx";
 
@@ -216,6 +218,8 @@ export default function StudySheet({
           />
         ) : null}
       </div>
+      {/* Inside the dialog: a tooltip elsewhere would paint under the modal. */}
+      <RefTooltip containerRef={bodyRef} lang={sheetLang} />
     </dialog>
   );
 }
@@ -348,6 +352,7 @@ function XrefChips({ items, ts, onGoto }) {
           <button
             type="button"
             className="xref-chip"
+            data-ref={refAttr(it.r)}
             onClick={(e) => {
               e.stopPropagation();
               onGoto?.(it.r);

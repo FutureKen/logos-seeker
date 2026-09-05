@@ -3,6 +3,7 @@ import CopyButton from "./CopyButton.jsx";
 import VerseText from "./VerseText.jsx";
 import OutlineHeading from "./OutlineHeading.jsx";
 import BookInfoCard from "./BookInfoCard.jsx";
+import RefTooltip from "./RefTooltip.jsx";
 import { useSelectPulse } from "../hooks/useSelectPulse.js";
 import { pickHalf } from "../hooks/useStudyChapter.js";
 import { isMidVerse, outlineForChapter } from "../hooks/useStudyBook.js";
@@ -258,6 +259,7 @@ export default function ChapterView({
 
   return (
     <div className="chapter-block" ref={rootRef}>
+      {study ? <RefTooltip containerRef={rootRef} lang={ch.lang ?? lang} /> : null}
       <div className="chapter-title">
         <span>
           {bookName} {chapter}

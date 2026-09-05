@@ -1,3 +1,5 @@
+import { refAttr } from "../study/refText.js";
+
 /**
  * Renders `Rich` — the paragraph/run tree the data pipeline produces for notes,
  * book-info fields and outline titles.
@@ -35,6 +37,7 @@ function Run({ run, onGoto, onNote }) {
       <button
         type="button"
         className="ref-link"
+        data-ref={refAttr(run.ref)}
         onClick={(e) => {
           e.stopPropagation();
           onGoto?.(run.ref);
