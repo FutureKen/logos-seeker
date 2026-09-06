@@ -1558,6 +1558,139 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* ------------------------ book-name abbreviations ------------------------ */
+
+/* The question mark that follows the starting hint. */
+.hint-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
+  padding: 2px;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.hint-help:hover {
+  filter: brightness(1.2);
+}
+
+.abbrev-dialog {
+  /* Tailwind preflight zeroes every margin, and a modal dialog is centred with
+     an auto one. Put it back. */
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 84vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.abbrev-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.abbrev-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.ab-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ab-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ab-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 12px 14px;
+  overscroll-behavior: contain;
+}
+
+.ab-intro {
+  margin: 10px 2px 4px;
+  color: var(--color-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.ab-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.ab-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ab-row:last-child {
+  border-bottom: 0;
+}
+
+.ab-name {
+  flex: 0 0 34%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+}
+
+.ab-cn {
+  color: var(--color-muted);
+  font-size: 12.5px;
+}
+
+.ab-aliases {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ab-alias-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ab-alias {
+  padding: 1px 6px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+}
+
+.ab-alias-line.cn .ab-alias {
+  font-family: inherit;
+  color: var(--color-muted);
+}
+
 /* ---------------------------- confirmation ---------------------------- */
 
 .confirm-dialog {
@@ -2126,7 +2259,8 @@ main {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
   .book-menu,
-  .style-dialog {
+  .style-dialog,
+  .abbrev-dialog {
     width: 100%;
     max-width: 100%;
     max-height: 88vh;
@@ -2138,8 +2272,12 @@ main {
   .sd-body {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
-  .bm-body {
+  .bm-body,
+  .ab-body {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .ab-name {
+    flex-basis: 40%;
   }
   .bm-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -2160,7 +2298,8 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .study-sheet,
   .book-menu,
-  .style-dialog {
+  .style-dialog,
+  .abbrev-dialog {
     animation: none;
   }
 }

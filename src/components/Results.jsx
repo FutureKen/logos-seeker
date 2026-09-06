@@ -1,3 +1,6 @@
+import { useState } from "react";
+import AbbrevDialog from "./AbbrevDialog.jsx";
+import { HelpIcon } from "./icons.jsx";
 import VerseRow from "./VerseRow.jsx";
 import FuzzyResults from "./FuzzyResults.jsx";
 import MoreButton from "./MoreButton.jsx";
@@ -6,6 +9,8 @@ import { tr } from "../lib/i18n.js";
 
 /** The starting hint, also shown while the verse data loads for the first time. */
 function Hint({ lang }) {
+  const t = tr(lang);
+  const [abbrevOpen, setAbbrevOpen] = useState(false);
   return (
     <div className="hint">
       {lang === "cn" ? (
@@ -18,7 +23,17 @@ function Hint({ lang }) {
           Type a reference like <code>John 1:1</code> or <code>John 1</code>, or any word
           like <code>Christ</code> or <code>love</code>.
         </>
-      )}
+      )}{" "}
+      <button
+        type="button"
+        className="hint-help"
+        aria-label={t.abbrevLink}
+        title={t.abbrevLink}
+        onClick={() => setAbbrevOpen(true)}
+      >
+        <HelpIcon size={15} className="hint-help-icon" />
+      </button>
+      <AbbrevDialog open={abbrevOpen} lang={lang} onClose={() => setAbbrevOpen(false)} />
     </div>
   );
 }
