@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import AppProvider from "../../src/state/AppProvider.jsx";
 import ScrollTop from "../../src/components/ScrollTop.jsx";
@@ -48,13 +48,39 @@ describe("back to top", () => {
     expect(button()).toBeNull();
   });
 
-  it("scrolls the page back to the top when pressed", () => {
+  it("travels to the top over a fixed, short animation", () => {
+    const frames = [];
+    vi.stubGlobal("requestAnimationFrame", (cb) => frames.push(cb));
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    vi.spyOn(performance, "now").mockReturnValue(0);
+
     renderButton();
-    scrollTo(400);
+    scrollTo(900);
     fireEvent.click(button());
-    expect(window.scrollTo).toHaveBeenCalledWith(
-      expect.objectContaining({ top: 0 }),
-    );
+    expect(frames).toHaveLength(1);
+
+    // Half way through the journey, half way up the page is still to come.
+    frames[0](120);
+    const mid = window.scrollTo.mock.calls.at(-1)[1];
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(900);
+
+    // Once the time is up it lands exactly on the top and asks for no more frames.
+    const pending = frames.length;
+    frames.at(-1)(240);
+    expect(window.scrollTo).toHaveBeenLastCalledWith(0, 0);
+    expect(frames).toHaveLength(pending);
+
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("jumps straight there when less motion is asked for", () => {
+    window.matchMedia = vi.fn(() => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+    renderButton();
+    scrollTo(900);
+    fireEvent.click(button());
+    expect(window.scrollTo).toHaveBeenLastCalledWith(0, 0);
   });
 
   it("is labelled in the reading language", () => {
