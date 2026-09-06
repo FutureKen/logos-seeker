@@ -403,12 +403,12 @@ main {
 .verse {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-left-width: 3px;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 10px;
 }
 
 .verse:hover {
@@ -422,7 +422,7 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: 22px;
   height: 26px;
   color: var(--color-muted);
   background: transparent;
@@ -565,13 +565,13 @@ main {
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 8px 6px;
 }
 
 .chapter-block .verse {
   border: 0;
   border-radius: 6px;
-  padding: 5px 6px;
+  padding: 5px 4px;
   background: transparent;
 }
 
@@ -1029,8 +1029,19 @@ main {
   #q {
     font-size: 16px;
   }
+  main {
+    padding: 8px 8px 64px;
+  }
   .verse {
     flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+  }
+  .chapter-block {
+    padding: 8px 3px;
+  }
+  .chapter-block .verse {
+    padding: 5px 2px;
   }
   .verse .text {
     font-size: calc(var(--reading-size) - 1px);
