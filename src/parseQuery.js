@@ -7,6 +7,9 @@
  *   1 John 2:3      1John 2:3
  *   约翰福音 1:1     约 1:1        约 1        创 1:1-3
  *   Ps 23           诗 23:1
+ *   西三16           太二四37       诗一一九105  启二二1～5
+ *                   (the compact form the Recovery Version prints: a Chinese
+ *                    numeral chapter run straight into an Arabic verse)
  *
  * Public API:
  *   buildAliasIndex(books) -> aliasIndex   (call once after books.json loads)
@@ -16,6 +19,60 @@
 /** Does the string contain any CJK ideograph? */
 export function hasCJK(s) {
   return /[㐀-鿿豈-﫿]/.test(s);
+}
+
+const CN_DIGITS = {
+  "〇": 0,
+  "○": 0,
+  "零": 0,
+  "一": 1,
+  "二": 2,
+  "三": 3,
+  "四": 4,
+  "五": 5,
+  "六": 6,
+  "七": 7,
+  "八": 8,
+  "九": 9,
+};
+
+const CN_NUMERAL = /^[〇○零一二三四五六七八九十]+$/;
+
+/**
+ * A Chinese numeral as printed in a Recovery Version reference.
+ *
+ * Chapters are written digit by digit — 二四 is 24, 一一九 is 119 — with 十
+ * still read the ordinary way, so 十九 is 19 and 二十一 is 21.
+ *
+ * @param {string} s
+ * @returns {number} NaN when the string is not a numeral
+ */
+export function cnNum(s) {
+  const t = String(s ?? "").trim();
+  if (!t) return NaN;
+  const ten = t.indexOf("十");
+  if (ten >= 0 && t.length <= 3) {
+    const head = t.slice(0, ten);
+    const tail = t.slice(ten + 1);
+    const h = head === "" ? 1 : CN_DIGITS[head];
+    const l = tail === "" ? 0 : CN_DIGITS[tail];
+    if (h != null && l != null) return h * 10 + l;
+  }
+  let n = 0;
+  for (const c of t) {
+    const d = CN_DIGITS[c];
+    if (d == null) return NaN;
+    n = n * 10 + d;
+  }
+  return n;
+}
+
+/** Full-width colons, digits and dashes are what a Chinese keyboard produces. */
+function normalizeCnPunct(s) {
+  return s
+    .replace(/[：]/g, ":")
+    .replace(/[～~—–]/g, "-")
+    .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0));
 }
 
 /**
@@ -64,24 +121,16 @@ export function parseReference(raw, aliasIndex) {
   const q = raw.trim();
   if (!q) return null;
 
-  // ---- Chinese reference: <cnBookAlias><digits>[:<v>[-<v2>]] ----
+  // ---- Chinese reference: <cnBookAlias> then any of the forms below ----
   if (hasCJK(q)) {
+    // Longest alias first, but a longer one that leads nowhere gives way to a
+    // shorter one rather than failing the whole parse.
     for (const alias of aliasIndex.cnByLen) {
-      if (q.startsWith(alias)) {
-        const bookIdx = aliasIndex.cn.get(alias);
-        const rest = q.slice(alias.length).trim();
-        // Explicit C:V (or range) → exact parse.
-        if (rest.includes(":")) {
-          const nums = parseChapterVerse(rest);
-          return nums ? makeRef(bookIdx, nums, aliasIndex) : null;
-        }
-        // Bare digit string → fuzzy split (also covers a plain valid chapter).
-        if (/^\d+$/.test(rest)) {
-          return makeFuzzy(bookIdx, rest, aliasIndex);
-        }
-        // alias alone (no chapter) is too ambiguous → treat as word search
-        return null;
-      }
+      if (!q.startsWith(alias)) continue;
+      const bookIdx = aliasIndex.cn.get(alias);
+      const rest = normalizeCnPunct(q.slice(alias.length).trim());
+      const ref = parseCnRest(bookIdx, rest, aliasIndex);
+      if (ref) return ref;
     }
     return null;
   }
@@ -105,6 +154,39 @@ export function parseReference(raw, aliasIndex) {
   }
   // Bare digit string with no colon → fuzzy split into chapter/verse options.
   return makeFuzzy(bookIdx, numPart, aliasIndex);
+}
+
+/**
+ * What can follow a Chinese book name:
+ *   "3:16", "3:16-18"   an explicit chapter and verse
+ *   "316"               bare digits, split every plausible way
+ *   "三16", "三16-18"    the compact form: a Chinese numeral chapter, then the
+ *                       verse in Arabic digits, with nothing in between
+ *   "三"                 a chapter on its own
+ * Anything else (including the bare book name) is not a reference.
+ */
+function parseCnRest(bookIdx, rest, aliasIndex) {
+  if (!rest) return null;
+  if (rest.includes(":")) {
+    const nums = parseChapterVerse(rest);
+    return nums ? makeRef(bookIdx, nums, aliasIndex) : null;
+  }
+  if (/^\d+$/.test(rest)) return makeFuzzy(bookIdx, rest, aliasIndex);
+
+  const m = /^([〇○零一二三四五六七八九十]+)(?:(\d+)(?:\s*-\s*(\d+))?)?$/.exec(rest);
+  if (!m) return null;
+  if (!CN_NUMERAL.test(m[1])) return null;
+  const chapter = cnNum(m[1]);
+  if (!Number.isFinite(chapter)) return null;
+  return makeRef(
+    bookIdx,
+    {
+      chapter,
+      verse: m[2] != null ? Number(m[2]) : null,
+      verseEnd: m[3] != null ? Number(m[3]) : null,
+    },
+    aliasIndex,
+  );
 }
 
 /**
