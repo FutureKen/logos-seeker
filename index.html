@@ -8,126 +8,48 @@
       name="description"
       content="Search the Recovery Version Bible (English & Chinese) by reference or word. Static, serverless, works offline."
     />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <!-- iOS home-screen app: run without browser chrome. The meta tag is the
          legacy form still honoured by older iOS alongside the manifest. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Logos Seeker" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)" />
-    <link rel="stylesheet" href="styles.css" />
-    <!-- Set the theme before first paint to avoid a flash of the wrong mode. -->
+<!-- Kept in step with the chosen colour scheme by AppProvider. -->
+    <meta name="theme-color" content="#0f1115" />
+    <!-- Apply the saved reading style before first paint, so there is no flash
+         of the wrong colours, typeface or text size. The palettes and font
+         stacks live in styles.css, keyed by these two attributes. -->
     <script>
       (function () {
-        var t = localStorage.getItem("ls-theme");
-        if (t !== "light" && t !== "dark") {
+        var root = document.documentElement;
+        var get = function (k) {
+          try {
+            return localStorage.getItem(k);
+          } catch (e) {
+            return null;
+          }
+        };
+        var schemes = ["light", "sepia", "gray", "dark", "black"];
+        var t = get("ls-theme");
+        if (schemes.indexOf(t) < 0) {
           t = window.matchMedia("(prefers-color-scheme: light)").matches
-            ? "light"
+            ? "sepia"
             : "dark";
         }
-        document.documentElement.setAttribute("data-theme", t);
+        root.setAttribute("data-theme", t);
+
+        var fonts = ["system", "serif", "sans", "book", "kai"];
+        var f = get("ls-font");
+        root.setAttribute("data-font", fonts.indexOf(f) < 0 ? "system" : f);
+
+        var s = parseInt(get("ls-font-size"), 10);
+        if (s >= 14 && s <= 28) root.style.setProperty("--reading-size", s + "px");
       })();
     </script>
   </head>
   <body>
-    <header class="topbar">
-      <h1 class="brand">
-        <img src="favicon.svg" alt="" class="brand-icon" width="28" height="28" />
-        Logos&nbsp;Seeker
-      </h1>
-      <div class="topbar-tools">
-        <div class="lang-toggle" role="group" aria-label="Display language">
-          <button type="button" data-lang="en" class="active">EN</button>
-          <button type="button" data-lang="cn">中文</button>
-        </div>
-        <button
-          type="button"
-          id="theme-toggle"
-          class="theme-toggle"
-          aria-label="Toggle light/dark mode"
-          title="Toggle light/dark mode"
-        ></button>
-      </div>
-    </header>
-
-    <main>
-      <form id="search-form" autocomplete="off">
-        <div class="search-box">
-          <input
-            id="q"
-            type="text"
-            placeholder="Search — e.g. rev222, 启222, tree of life, 生命树"
-            aria-label="Search the Bible"
-            enterkeyhint="search"
-          />
-          <button
-            id="back-to-results"
-            type="button"
-            class="back-btn"
-            aria-label="Back to search results"
-            title="Back to search results"
-            hidden
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path
-                d="M9 5 4 10l5 5M4 10h10a5 5 0 0 1 0 10h-3"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            id="clear"
-            type="button"
-            class="clear-btn"
-            aria-label="Clear search (Esc)"
-            title="Clear (Esc)"
-            hidden
-          >
-            &times;
-          </button>
-        </div>
-      </form>
-
-      <p id="status" class="status" aria-live="polite"></p>
-      <div id="results" class="results"></div>
-    </main>
-
-    <button id="deselect-all" type="button" class="deselect-btn" hidden>
-      Deselect all
-    </button>
-
-    <footer class="foot">
-      <span>
-        <a href="https://www.recoveryversion.bible/" target="_blank" rel="noopener noreferrer"
-          >Recovery Version</a
-        >
-        · English &amp; 中文
-      </span>
-      <span class="muted">Static &amp; offline after first load</span>
-      <span class="muted">For personal use only.</span>
-      <button type="button" id="install-help-link" class="link-btn">
-        How to add to Home Screen
-      </button>
-    </footer>
-
-    <!-- Filled in by app.js so the steps follow the EN/CN toggle. -->
-    <dialog id="install-help" class="help-dialog" aria-labelledby="install-help-title">
-      <div class="help-head">
-        <h2 id="install-help-title"></h2>
-        <button type="button" id="install-help-close" class="clear-btn help-close">
-          &times;
-        </button>
-      </div>
-      <div id="install-help-body" class="help-body"></div>
-    </dialog>
-
-    <script type="module" src="src/app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,0 +1,2314 @@
+@import "tailwindcss";
+
+/* Dark is the default palette; `[data-theme="light"]` overrides it. The
+   theme attribute is set before first paint by the inline script in
+   index.html, so there is no flash of the wrong mode. */
+@theme {
+  --color-bg: #0f1115;
+  --color-panel: #171a21;
+  --color-panel-2: #1d212b;
+  --color-text: #e6e8ee;
+  --color-muted: #97a0b0;
+  --color-accent: #6ea8fe;
+  --color-accent-soft: #25406e;
+  --color-sel-bg: #1c3357;
+  --color-sel-hover: #1a2230;
+  --color-mark: #ffd66e;
+  --color-border: #2a2f3a;
+  --color-otl: #c9a86a;
+}
+
+[data-theme="light"] {
+  --color-bg: #f6f7f9;
+  --color-panel: #ffffff;
+  --color-panel-2: #f0f2f6;
+  --color-text: #1a1d24;
+  --color-muted: #5c6573;
+  --color-accent: #2f6fed;
+  --color-accent-soft: #d7e3ff;
+  --color-sel-bg: #dbe7ff;
+  --color-sel-hover: #eef2f8;
+  --color-mark: #ffe08a;
+  --color-border: #e1e5ec;
+  --color-otl: #8a6d2b;
+}
+
+/* Warm paper — the default whenever the OS asks for a light appearance. */
+[data-theme="sepia"] {
+  --color-bg: #f2e8d5;
+  --color-panel: #fbf4e4;
+  --color-panel-2: #eadfc7;
+  --color-text: #40372c;
+  --color-muted: #7a6a55;
+  --color-accent: #9a5b28;
+  --color-accent-soft: #e8d8ba;
+  --color-sel-bg: #e7d7b4;
+  --color-sel-hover: #f0e7d3;
+  --color-mark: #f2cd80;
+  --color-border: #dccfb2;
+  --color-otl: #8a5a1f;
+}
+
+/* Dimmed daylight: the contrast of paper without the glare of white. */
+[data-theme="gray"] {
+  --color-bg: #dcdee1;
+  --color-panel: #eaecef;
+  --color-panel-2: #d2d5da;
+  --color-text: #23262c;
+  --color-muted: #575d67;
+  --color-accent: #2c5fb8;
+  --color-accent-soft: #c6d6f2;
+  --color-sel-bg: #c8d8f3;
+  --color-sel-hover: #e2e4e8;
+  --color-mark: #efd57a;
+  --color-border: #c0c4ca;
+  --color-otl: #6f5a20;
+}
+
+/* True black, for OLED screens and for reading in the dark. */
+[data-theme="black"] {
+  --color-bg: #000000;
+  --color-panel: #0a0a0c;
+  --color-panel-2: #141519;
+  --color-text: #dde0e6;
+  --color-muted: #868e9c;
+  --color-accent: #7db1ff;
+  --color-accent-soft: #16304f;
+  --color-sel-bg: #132540;
+  --color-sel-hover: #101116;
+  --color-mark: #ffd66e;
+  --color-border: #23252b;
+  --color-otl: #c9a86a;
+}
+
+/* Tailwind's `dark:` variant follows our explicit attribute, not the OS. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --radius: 12px;
+  --maxw: 820px;
+  /* Height shared by every control in the top bar, so they line up exactly. */
+  --tool-h: 34px;
+  /* The reading style. `inherit` means the body's own stack — the "System"
+     option — and index.html applies a saved size before first paint. */
+  --reading-font: inherit;
+  --reading-size: 16px;
+}
+
+/* The typefaces offered in the reading-style dialog. Each pairs a Latin family
+   with a Chinese one, and every family is already on the device: the app has to
+   work offline, so it never downloads a font. */
+[data-font="serif"] {
+  --reading-font: Georgia, "Times New Roman", "Songti SC", STSong, SimSun, serif;
+}
+
+[data-font="sans"] {
+  --reading-font: "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+[data-font="book"] {
+  --reading-font: "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
+    "Songti SC", STSong, serif;
+}
+
+[data-font="kai"] {
+  --reading-font: Baskerville, "Palatino Linotype", Palatino, "Kaiti SC", KaiTi,
+    STKaiti, serif;
+}
+
+/* Everything that is read rather than operated follows the reading style. */
+.verse .text,
+.il-line .il-text,
+.sheet-verse,
+.note-card .rt-p,
+.book-info .rt-p,
+.rt-line,
+.otl-title {
+  font-family: var(--reading-font);
+}
+
+/* ===========================================================================
+   Component classes. Ported from the pre-React stylesheet so the look is
+   unchanged; the palette now comes from the `@theme` tokens above (so
+   `bg-bg`, `text-muted`, `border-border`… work alongside these in JSX).
+   =========================================================================== */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------- top bar ---------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px 16px 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  /* The title gives way first: the controls to its right must never be pushed
+     off the edge of a narrow screen. */
+  min-width: 0;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+.brand-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-icon {
+  display: block;
+  flex: none;
+}
+
+.topbar-tools {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  height: var(--tool-h);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-toggle button {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lang-toggle button.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Opens the reading-style dialog; "Aa" rather than an icon, because what it
+   changes is the type as much as the colours. */
+.style-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tool-h);
+  height: var(--tool-h);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.style-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Study gate: the Unlock button and the Notes toggle share the top-bar pill. */
+.unlock-btn,
+.notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--tool-h);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.unlock-btn:hover,
+.notes-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.notes-toggle.active {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ---------------------------- search ---------------------------- */
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+#search-form {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 0;
+  background: linear-gradient(var(--color-bg) 70%, transparent);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#q {
+  width: 100%;
+  padding: 16px 46px 16px 18px;
+  font-size: 18px;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#q:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+/* hide native search clear control (we provide our own) */
+#q::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.clear-btn:hover {
+  color: var(--color-text);
+  background: var(--color-border);
+}
+
+/* "Back to results" — sits just left of the clear button, shown only while a
+   chapter view is covering an earlier result list. */
+.back-btn {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.back-btn:hover {
+  color: #fff;
+  background: var(--color-accent);
+}
+
+/* keep the text clear of the extra button */
+.search-box.has-back #q {
+  padding-right: 82px;
+}
+
+.status {
+  color: var(--color-muted);
+  font-size: 14px;
+  min-height: 20px;
+  margin: 4px 2px 12px;
+}
+
+/* ---------------------------- results ---------------------------- */
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Compact single-line verse row: [copy] [ref] text. The wide left border
+   leaves room for the selected accent bar without shifting the text. */
+.verse {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.verse:hover {
+  background: var(--color-sel-hover);
+  border-color: var(--color-accent);
+}
+
+.copy-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--color-accent);
+  background: var(--color-panel-2);
+  border-color: var(--color-border);
+}
+
+.copy-btn.copied {
+  color: #2ec27e;
+  border-color: #2ec27e;
+}
+
+.verse .ref {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 6px;
+  padding: 2px 7px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.verse .ref:hover {
+  text-decoration: underline;
+}
+
+.verse .text {
+  flex: 1 1 auto;
+  font-size: var(--reading-size);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.verse.cn .text {
+  font-size: calc(var(--reading-size) + 1px);
+  line-height: 1.8;
+}
+
+/* Selected verse — high-contrast: accent left bar, filled background, ring */
+.verse.selected,
+.chapter-block .verse.selected {
+  background: var(--color-sel-bg);
+  border-color: var(--color-accent);
+  border-left-color: var(--color-accent);
+  box-shadow: inset 3px 0 0 0 var(--color-accent), 0 0 0 1px var(--color-accent);
+}
+
+.verse.selected:hover {
+  background: var(--color-sel-bg);
+}
+
+/* turn the copy button into a solid accent chip when its row is selected */
+.verse.selected .copy-btn {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.verse.selected .ref {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* brief pulse the moment a verse is selected, for clear click feedback */
+@keyframes verse-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.012);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.verse.just-selected {
+  animation: verse-pop 0.22s ease-out;
+}
+
+/* Verse the chapter view jumped to — fades out so the eye finds it, then
+   leaves the chapter reading cleanly. */
+@keyframes verse-focus-fade {
+  0%,
+  55% {
+    background: var(--color-accent-soft);
+    box-shadow: inset 3px 0 0 0 var(--color-accent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.chapter-block .verse.focused {
+  animation: verse-focus-fade 2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-block .verse.focused {
+    animation: none;
+    background: var(--color-accent-soft);
+  }
+}
+
+.verse mark {
+  background: var(--color-mark);
+  color: #1a1d24;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.verse .alt-note {
+  font-size: 12px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.fuzzy-chapter .text.muted {
+  color: var(--color-muted);
+  font-size: 14px;
+  cursor: default;
+}
+
+/* ---------------------------- chapter view ---------------------------- */
+
+.chapter-block {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.chapter-block .verse {
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 6px;
+  background: transparent;
+}
+
+.chapter-block .verse:hover {
+  background: var(--color-panel-2);
+}
+
+.chapter-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-muted);
+  padding: 6px 6px 10px;
+}
+
+.chapter-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-border);
+  border-color: var(--color-accent);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.il-toggle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.il-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.il-toggle.active {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.chapter-block .verse .vnum {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 12px;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+/* ---- Interlinear verse layout (EN line above CN line) ---- */
+.verse.interlinear {
+  align-items: flex-start;
+}
+
+.verse.interlinear .il-stack {
+  display: flex;
+  gap: 8px;
+}
+
+.verse.interlinear .vnum {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.il-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.il-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.il-line .il-text {
+  font-size: calc(var(--reading-size) - 0.5px);
+}
+
+.il-line.cn .il-text {
+  font-size: calc(var(--reading-size) + 0.5px);
+  line-height: 1.7;
+}
+
+.il-line.cn {
+  padding-bottom: 2px;
+}
+
+/* ---------------------------- empty states ---------------------------- */
+
+.empty,
+.loading {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.hint {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 36px 16px;
+  font-size: 15px;
+}
+
+.hint code {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--color-text);
+}
+
+/* ---------------------------- footer ---------------------------- */
+
+.foot {
+  width: 100%;
+  max-width: var(--maxw);
+  /* The auto top margin keeps it at the foot of a short page. */
+  margin: auto auto 0;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+/* A footer entry whose label is preceded by a small icon. */
+.foot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.foot-icon {
+  flex: none;
+}
+
+.foot a {
+  color: var(--color-accent);
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* A footer entry that acts as a link but is a button (it opens a dialog). */
+.link-btn {
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  filter: brightness(1.15);
+}
+
+/* ---- Dialogs: "Add to Home Screen" walkthrough and the unlock prompt ---- */
+.help-dialog {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
+  width: min(440px, calc(100vw - 32px));
+  max-height: 85vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* Only while open — a bare `display: flex` would defeat dialog's own hiding. */
+.help-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.help-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.help-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* the round × reuses .clear-btn's look, but in flow rather than absolute */
+.help-close {
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+}
+
+.help-body {
+  flex: 1 1 auto;
+  min-height: 0; /* let it shrink so the scroll happens here, not on the page */
+  padding: 4px 16px 20px;
+  overflow-y: auto;
+  overflow-anchor: none; /* image loads must not shift the reading position */
+  -webkit-overflow-scrolling: touch;
+}
+
+.help-step {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-step:last-of-type {
+  border-bottom: 0;
+}
+
+.help-step p {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.help-step .step-n {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-accent);
+  border-radius: 50%;
+  transform: translateY(2px);
+}
+
+.help-step img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #000;
+}
+
+.help-note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border-radius: 10px;
+}
+
+/* ---- Unlock dialog ---- */
+.unlock-dialog {
+  width: min(380px, calc(100vw - 32px));
+}
+
+.unlock-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unlock-label {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.pw-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pw-field input {
+  width: 100%;
+  padding: 12px 44px 12px 14px;
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pw-field input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.pw-reveal {
+  position: absolute;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--color-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pw-reveal:hover {
+  background: var(--color-border);
+}
+
+.unlock-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: #ff6b6b;
+}
+
+.unlock-submit {
+  margin-top: 4px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.unlock-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.unlock-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---------------------------- floating bits ---------------------------- */
+
+/* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+.deselect-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.deselect-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* "More results" button under keyword search results */
+.more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.more-btn:hover {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tool-h: 30px;
+  }
+  #q {
+    font-size: 16px;
+  }
+  .verse {
+    flex-wrap: wrap;
+  }
+  .verse .text {
+    font-size: calc(var(--reading-size) - 1px);
+    flex-basis: 100%;
+  }
+  /* The top bar gained the study-gate pill, so tighten everything to keep the
+     row on one line at 375 px. */
+  .topbar {
+    gap: 8px;
+    padding: 14px 10px 6px;
+  }
+  .brand {
+    font-size: 17px;
+    gap: 6px;
+  }
+  .brand-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .topbar-tools {
+    gap: 6px;
+  }
+  .lang-toggle button {
+    padding: 0 11px;
+    font-size: 13px;
+  }
+  .unlock-btn,
+  .notes-toggle {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+/* ===========================================================================
+   Study apparatus (subtask D): footnote / cross-reference markers, outline
+   headings, the book-info card and the study sheet.
+
+   The sheet borrows the logos-rhema reading feel — a warm paper note card in
+   light mode, the panel-2 surface in dark — while everything else keeps the
+   palette of the app.
+   =========================================================================== */
+
+:root {
+  --color-note: #1d212b;
+  --color-note-edge: #2a2f3a;
+}
+
+[data-theme="light"] {
+  --color-note: #fdf9f1;
+  --color-note-edge: #e6ddc9;
+}
+
+[data-theme="sepia"] {
+  --color-note: #fdf7e9;
+  --color-note-edge: #e2d5b8;
+}
+
+[data-theme="gray"] {
+  --color-note: #f1f2f4;
+  --color-note-edge: #cfd3d9;
+}
+
+[data-theme="black"] {
+  --color-note: #101116;
+  --color-note-edge: #23252b;
+}
+
+/* ---- superscript markers ---- */
+
+/* The negative margin keeps the 24 px tap target from opening up the line
+   height; `user-select: none` is what keeps a dragged selection (and the copy
+   it produces) free of marker labels. */
+.mk {
+  display: inline-block;
+  padding: 6px 2px;
+  margin: -6px 0;
+  /* Relative to the verse it sits in, so it follows the reading size. */
+  font-size: 0.7em;
+  line-height: 1;
+  vertical-align: super;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 4px;
+}
+
+.mk:hover {
+  background: var(--color-panel-2);
+}
+
+.mk-n {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.mk-x {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Unaligned markers cannot sit on a word, so they ride just after the verse
+   number as a small group. */
+.mk-float {
+  margin-right: 2px;
+}
+
+/* A verse number that opens the sheet says so with a dotted underline. */
+.chapter-block .verse .vnum-btn {
+  font: inherit;
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 12px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  padding: 2px 1px;
+  background: none;
+  border: 0;
+  border-bottom: 1px dotted var(--color-accent);
+  cursor: pointer;
+}
+
+.chapter-block .verse .vnum-btn:hover {
+  border-bottom-style: solid;
+}
+
+/* ---- outline headings ---- */
+
+.otl {
+  color: var(--color-otl);
+  font-weight: 700;
+  line-height: 1.45;
+  padding: 10px 6px 4px;
+}
+
+.otl-inline {
+  display: block;
+  padding: 10px 0 2px;
+}
+
+.otl-label {
+  margin-right: 6px;
+  opacity: 0.85;
+}
+
+.otl-l1 {
+  font-size: var(--reading-size);
+}
+.otl-l2 {
+  font-size: calc(var(--reading-size) - 1px);
+}
+.otl-l3 {
+  font-size: calc(var(--reading-size) - 1.5px);
+}
+.otl-l4 {
+  font-size: calc(var(--reading-size) - 2px);
+  font-weight: 600;
+}
+.otl-l5,
+.otl-l6 {
+  font-size: calc(var(--reading-size) - 2.5px);
+  font-weight: 600;
+}
+
+.otl-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 4px 2px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.otl-btn:hover {
+  background: var(--color-panel-2);
+}
+
+.study-status {
+  color: var(--color-muted);
+  font-size: 13px;
+  padding: 2px 8px 8px;
+}
+
+/* ---- book info card ---- */
+
+.book-info {
+  margin: 4px 6px 12px;
+  padding: 12px 14px;
+  background: var(--color-note);
+  border: 1px solid var(--color-note-edge);
+  border-radius: 10px;
+  font-size: calc(var(--reading-size) - 2px);
+  line-height: 1.65;
+}
+
+.book-info-title {
+  font-weight: 700;
+  color: var(--color-otl);
+  margin-bottom: 6px;
+}
+
+.bi-row {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.bi-label {
+  flex: 0 0 auto;
+  min-width: 8.5em;
+  color: var(--color-muted);
+  font-size: calc(var(--reading-size) - 3.5px);
+  font-weight: 700;
+  padding-top: 2px;
+}
+
+.bi-val {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bi-val .rt-p {
+  margin: 0;
+}
+
+/* ---- rich text runs ---- */
+
+.rt-p {
+  margin: 0 0 8px;
+}
+
+.rt-p:last-child {
+  margin-bottom: 0;
+}
+
+.rt-sup {
+  font-size: 0.75em;
+  color: var(--color-muted);
+}
+
+.ref-link,
+.note-link {
+  font: inherit;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ref-link:hover,
+.note-link:hover {
+  filter: brightness(1.15);
+}
+
+.note-link {
+  color: var(--color-otl);
+}
+
+/* ---- the study sheet ---- */
+
+.study-sheet {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
+  width: min(640px, calc(100vw - 32px));
+  max-height: 85vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.study-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.study-sheet::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.sheet-head {
+  flex: 0 0 auto;
+  padding: 12px 14px 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.sheet-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-alt {
+  font-weight: 400;
+}
+
+.sheet-head-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.sheet-lang {
+  display: inline-flex;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sheet-lang button {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  padding: 4px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sheet-lang button.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.sheet-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.sheet-tab {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.sheet-tab.active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-accent);
+}
+
+.sheet-tab:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px 14px 20px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-status {
+  color: var(--color-muted);
+  font-size: 14px;
+  padding: 12px 2px;
+  margin: 0;
+}
+
+.sheet-verse {
+  font-size: calc(var(--reading-size) - 0.5px);
+  line-height: 1.75;
+  padding: 4px 2px 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 12px;
+}
+
+.sheet-verse.cn {
+  font-size: calc(var(--reading-size) + 0.5px);
+  line-height: 1.85;
+}
+
+.note-card {
+  background: var(--color-note);
+  border: 1px solid var(--color-note-edge);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: calc(var(--reading-size) - 1.5px);
+  line-height: 1.75;
+  scroll-margin-top: 8px;
+}
+
+.note-card.focused {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.nc-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nc-label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+.nc-word {
+  font-weight: 700;
+  color: var(--color-otl);
+}
+
+.nc-repeat {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13.5px;
+  font-style: italic;
+}
+
+.xrefs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.xref-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cf-prefix {
+  color: var(--color-muted);
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+.xref-chip {
+  font: inherit;
+  font-size: calc(var(--reading-size) - 3.5px);
+  color: var(--color-accent);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.xref-chip:hover {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.outline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.otl-item {
+  color: var(--color-otl);
+  font-weight: 600;
+}
+
+.otl-item.current {
+  background: var(--color-accent-soft);
+  border-radius: 6px;
+}
+
+.otl-item .otl-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.otl-item .otl-title {
+  flex: 1 1 auto;
+}
+
+.otl-range {
+  flex: 0 0 auto;
+  font-size: calc(var(--reading-size) - 4px);
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+/* ---- footer: download for offline ---- */
+
+.dl-study {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dl-progress {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------ book-name abbreviations ------------------------ */
+
+/* The question mark that follows the starting hint. */
+.hint-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
+  padding: 2px;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.hint-help:hover {
+  filter: brightness(1.2);
+}
+
+.abbrev-dialog {
+  /* Tailwind preflight zeroes every margin, and a modal dialog is centred with
+     an auto one. Put it back. */
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 84vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.abbrev-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.abbrev-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.ab-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ab-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ab-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 12px 14px;
+  overscroll-behavior: contain;
+}
+
+.ab-intro {
+  margin: 10px 2px 4px;
+  color: var(--color-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.ab-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.ab-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ab-row:last-child {
+  border-bottom: 0;
+}
+
+.ab-name {
+  flex: 0 0 34%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+}
+
+.ab-cn {
+  color: var(--color-muted);
+  font-size: 12.5px;
+}
+
+.ab-aliases {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ab-alias-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ab-alias {
+  padding: 1px 6px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+}
+
+.ab-alias-line.cn .ab-alias {
+  font-family: inherit;
+  color: var(--color-muted);
+}
+
+/* ---------------------------- confirmation ---------------------------- */
+
+.confirm-dialog {
+  /* Tailwind preflight zeroes every margin, and a modal dialog is centred with
+     an auto one. Put it back. */
+  margin: auto;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.cd-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cd-body {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.cd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cd-btn {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cd-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.cd-primary {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ------------------------- reading-style dialog ------------------------- */
+
+.style-dialog {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
+  width: min(420px, calc(100vw - 32px));
+  max-height: 85vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.style-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.style-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.sd-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sd-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sd-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px;
+  overscroll-behavior: contain;
+}
+
+.sd-section + .sd-section {
+  margin-top: 18px;
+}
+
+.sd-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--color-muted);
+}
+
+.sd-size-value {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- colour schemes ---- */
+
+.sd-schemes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 8px;
+}
+
+.sd-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 5px;
+  font-size: 11px;
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.sd-swatch:hover {
+  border-color: var(--color-accent);
+}
+
+.sd-swatch.active {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* Each swatch is painted in the scheme it offers, so the choice is the preview. */
+.sw-chip {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid;
+  border-radius: 7px;
+}
+
+.sd-swatch[data-scheme="light"] .sw-chip {
+  background: #ffffff;
+  color: #1a1d24;
+  border-color: #e1e5ec;
+}
+
+.sd-swatch[data-scheme="sepia"] .sw-chip {
+  background: #f2e8d5;
+  color: #40372c;
+  border-color: #dccfb2;
+}
+
+.sd-swatch[data-scheme="gray"] .sw-chip {
+  background: #dcdee1;
+  color: #23262c;
+  border-color: #c0c4ca;
+}
+
+.sd-swatch[data-scheme="dark"] .sw-chip {
+  background: #171a21;
+  color: #e6e8ee;
+  border-color: #2a2f3a;
+}
+
+.sd-swatch[data-scheme="black"] .sw-chip {
+  background: #000000;
+  color: #dde0e6;
+  border-color: #23252b;
+}
+
+.sw-name {
+  text-align: center;
+}
+
+/* ---- typefaces ---- */
+
+.sd-fonts {
+  display: grid;
+  gap: 6px;
+}
+
+.sd-font {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 11px;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.sd-font:hover {
+  border-color: var(--color-accent);
+}
+
+.sd-font.active {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.sf-sample {
+  font-size: 17px;
+}
+
+/* The sample is set in the face it offers. */
+.sd-font[data-font-sample="serif"] .sf-sample {
+  font-family: Georgia, "Times New Roman", "Songti SC", STSong, SimSun, serif;
+}
+
+.sd-font[data-font-sample="sans"] .sf-sample {
+  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+.sd-font[data-font-sample="book"] .sf-sample {
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
+    "Songti SC", STSong, serif;
+}
+
+.sd-font[data-font-sample="kai"] .sf-sample {
+  font-family: Baskerville, "Palatino Linotype", Palatino, "Kaiti SC", KaiTi,
+    STKaiti, serif;
+}
+
+.sf-name {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* ---- text size ---- */
+
+.sd-size {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sd-step {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1px;
+  flex: none;
+  width: 38px;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sd-step-big {
+  font-size: 17px;
+}
+
+.sd-step-sign {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.sd-step:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sd-range {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+.sd-sample {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-family: var(--reading-font);
+  font-size: var(--reading-size);
+  line-height: 1.7;
+  background: var(--color-note);
+  border: 1px solid var(--color-note-edge);
+  border-radius: 9px;
+}
+
+/* --------------------- hover preview of a reference --------------------- */
+
+.ref-tip {
+  position: fixed;
+  z-index: 20;
+  /* Sized in em so a larger reading size keeps roughly the same number of
+     words per line instead of making a tall, narrow column. */
+  max-width: min(26em, 560px, calc(100vw - 24px));
+  padding: 8px 10px;
+  font-size: calc(var(--reading-size) - 3px);
+  line-height: 1.45;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  /* Never let the tooltip itself take the pointer: it sits over the link it
+     describes, and swallowing the hover would make it flicker. */
+  pointer-events: none;
+}
+
+/* Rendered once to be measured, then placed. */
+.ref-tip.measuring {
+  visibility: hidden;
+}
+
+.ref-tip.cn {
+  font-size: calc(var(--reading-size) - 2px);
+  line-height: 1.6;
+}
+
+.rt-head {
+  margin-bottom: 4px;
+  font-size: 0.92em;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.rt-line {
+  margin: 0 0 2px;
+}
+
+.rt-line:last-child {
+  margin-bottom: 0;
+}
+
+.rt-no {
+  margin-right: 5px;
+  font-size: 0.85em;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rt-more {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+}
+
+/* ------------------------------- book menu ------------------------------- */
+
+/* Sits inside the brand, left of the icon, so it reads as "open the Bible". */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tool-h);
+  height: var(--tool-h);
+  flex: none;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.menu-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.book-menu {
+  /* Tailwind preflight zeroes every margin, which takes away the `margin: auto`
+     a modal dialog is centred with. Put it back. */
+  margin: auto;
+  width: min(600px, calc(100vw - 32px));
+  max-height: 82vh;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.book-menu[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.book-menu::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.bm-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.bm-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* The chapter step reuses the section heading, so it sticks like the others. */
+.bm-book-name {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.bm-back {
+  font-size: 13px;
+  color: var(--color-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bm-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 12px 14px;
+  overscroll-behavior: contain;
+}
+
+.bm-status {
+  color: var(--color-muted);
+  font-size: 13px;
+  padding: 12px 2px;
+}
+
+.bm-section-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 10px 2px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--color-muted);
+  background: var(--color-panel);
+}
+
+.bm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.bm-book {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 7px;
+  text-align: left;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.bm-book:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.bm-book-title {
+  font-size: 13px;
+  line-height: 1.25;
+  /* Long English names ("1 Thessalonians") wrap to a second line at a word
+     boundary rather than being cut off; the grid row stretches every card to
+     match, so the columns stay even. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.bm-book-ch {
+  font-size: 11px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bm-chapters {
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  padding-top: 8px;
+}
+
+.bm-chapter {
+  padding: 8px 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.bm-chapter:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ---- phone: the sheet becomes a bottom sheet ---- */
+
+@media (max-width: 640px) {
+  .study-sheet {
+    width: 100%;
+    max-width: 100%;
+    max-height: 88vh;
+    margin: auto auto 0;
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    animation: sheet-up 0.22s ease-out;
+  }
+  .sheet-body {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .book-menu,
+  .style-dialog,
+  .abbrev-dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: 88vh;
+    margin: auto auto 0;
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    animation: sheet-up 0.22s ease-out;
+  }
+  .sd-body {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .bm-body,
+  .ab-body {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .ab-name {
+    flex-basis: 40%;
+  }
+  .bm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .study-sheet,
+  .book-menu,
+  .style-dialog,
+  .abbrev-dialog {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .bi-label {
+    min-width: 6.5em;
+  }
+  .chapter-tools .study-btn {
+    padding: 4px 9px;
+  }
+}

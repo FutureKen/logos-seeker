@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "book": 1,
+  "en": {
+    "info": {
+      "author": [["Placeholder author line with a reference ", { "ref": [40, 8, 4, 0], "t": "Matt. 8:4" }, "."]],
+      "written": [["Placeholder time-of-writing line."]],
+      "place": [["Placeholder place-of-writing line."]],
+      "period": [["Placeholder time-period line."]],
+      "subject": [["Placeholder subject line for the fixture book."]]
+    },
+    "outline": [
+      { "level": 1, "label": "I.", "title": "God's creation", "start": [1, 1, 0], "end": [2, 25, 0] },
+      {
+        "level": 2,
+        "label": "A.",
+        "title": "The heavens and the earth created by God",
+        "start": [1, 1, 0],
+        "end": [1, 1, 0]
+      },
+      {
+        "level": 2,
+        "label": "B.",
+        "title": "The earth becoming waste and empty",
+        "start": [1, 2, 1],
+        "end": [1, 2, 1]
+      },
+      {
+        "level": 3,
+        "label": "1.",
+        "title": "God's restoration and further creation",
+        "start": [1, 2, 2],
+        "end": [2, 3, 0],
+        "pos": 87
+      }
+    ]
+  },
+  "cn": {
+    "info": {
+      "author": [["占位著者说明，含一处引用 ", { "ref": [40, 8, 4, 0], "t": "太八4" }, "。"]],
+      "written": [["占位著时说明。"]],
+      "place": [["占位著地说明。"]],
+      "period": [["占位涵盖时段说明。"]],
+      "subject": [["占位主题说明。"]]
+    },
+    "outline": [
+      { "level": 1, "label": "壹", "title": "神的创造", "start": [1, 1, 0], "end": [2, 25, 0] },
+      { "level": 2, "label": "一", "title": "神创造诸天与地", "start": [1, 1, 0], "end": [1, 1, 0] },
+      { "level": 2, "label": "二", "title": "地变为荒废空虚", "start": [1, 2, 1], "end": [1, 2, 1] },
+      {
+        "level": 3,
+        "label": "1",
+        "title": "神的恢复与进一步的创造",
+        "start": [1, 2, 2],
+        "end": [2, 3, 0],
+        "pos": 15
+      }
+    ]
+  }
+}
