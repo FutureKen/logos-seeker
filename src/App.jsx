@@ -16,6 +16,7 @@ import Results from "./components/Results.jsx";
 import ChapterView from "./components/ChapterView.jsx";
 import StudySheet from "./components/StudySheet.jsx";
 import DeselectButton from "./components/DeselectButton.jsx";
+import ScrollTop from "./components/ScrollTop.jsx";
 import Footer from "./components/Footer.jsx";
 
 /**
@@ -411,6 +412,7 @@ function Shell() {
         />
       ) : null}
       <DeselectButton />
+      <ScrollTop />
       <Footer />
     </>
   );

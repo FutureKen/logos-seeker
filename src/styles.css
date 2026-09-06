@@ -403,12 +403,12 @@ main {
 .verse {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-left-width: 3px;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 10px;
 }
 
 .verse:hover {
@@ -422,7 +422,7 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: 22px;
   height: 26px;
   color: var(--color-muted);
   background: transparent;
@@ -459,6 +459,18 @@ main {
 
 .verse .ref:hover {
   text-decoration: underline;
+}
+
+/* A search result reads as a reference and then the verse it names: the
+   reference has the first line to itself and the text starts on the next. A
+   chapter verse is excluded — it has no reference beside it, so its text stays
+   on the same line as the copy button. */
+.verse:not(.chapter-verse) {
+  flex-wrap: wrap;
+}
+
+.verse:not(.chapter-verse):not(.fuzzy-chapter) .text {
+  flex-basis: 100%;
 }
 
 .verse .text {
@@ -565,14 +577,18 @@ main {
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 8px 6px;
 }
 
 .chapter-block .verse {
   border: 0;
   border-radius: 6px;
-  padding: 5px 6px;
+  padding: 5px 4px;
   background: transparent;
+}
+
+.chapter-block .verse .copy-btn {
+  align-self: flex-start;
 }
 
 .chapter-block .verse:hover {
@@ -975,6 +991,44 @@ main {
 /* ---------------------------- floating bits ---------------------------- */
 
 /* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+/* Back to top: it floats over the text it is covering, so it stays faint
+   until the pointer arrives, and it leaves room for the selection pill in the
+   middle of the same edge. */
+.scroll-top {
+  position: fixed;
+  right: 14px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.4;
+  backdrop-filter: blur(3px);
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.scroll-top:hover,
+.scroll-top:focus-visible {
+  opacity: 0.95;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* A touch screen has no hover to reveal it, so keep it a little more visible. */
+@media (hover: none) {
+  .scroll-top {
+    opacity: 0.55;
+  }
+}
+
 .deselect-btn {
   position: fixed;
   left: 50%;
@@ -1025,12 +1079,21 @@ main {
   #q {
     font-size: 16px;
   }
+  main {
+    padding: 8px 8px 64px;
+  }
   .verse {
-    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+  }
+  .chapter-block {
+    padding: 8px 3px;
+  }
+  .chapter-block .verse {
+    padding: 5px 2px;
   }
   .verse .text {
     font-size: calc(var(--reading-size) - 1px);
-    flex-basis: 100%;
   }
   /* The top bar gained the study-gate pill, so tighten everything to keep the
      row on one line at 375 px. */
@@ -1111,10 +1174,20 @@ main {
   user-select: none;
   -webkit-user-select: none;
   border-radius: 4px;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
 }
 
+/* The verse row lights up on hover as well, so a marker cannot answer with
+   another shade of panel: it takes the accent outright, and its digits and
+   letters turn to read against it. */
 .mk:hover {
-  background: var(--color-panel-2);
+  background: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.mk:hover .mk-n,
+.mk:hover .mk-x {
+  color: #fff;
 }
 
 .mk-n {
