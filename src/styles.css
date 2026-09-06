@@ -274,7 +274,16 @@ body {
 
 /* ---------------------------- search ---------------------------- */
 
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 main {
+  flex: 1 0 auto;
+  width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 8px 16px 64px;
@@ -712,15 +721,29 @@ main {
 /* ---------------------------- footer ---------------------------- */
 
 .foot {
+  width: 100%;
   max-width: var(--maxw);
-  margin: 0 auto;
+  /* The auto top margin keeps it at the foot of a short page. */
+  margin: auto auto 0;
   padding: 16px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 14px;
   color: var(--color-muted);
   font-size: 13px;
   flex-wrap: wrap;
+}
+
+/* A footer entry whose label is preceded by a small icon. */
+.foot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.foot-icon {
+  flex: none;
 }
 
 .foot a {
@@ -1012,7 +1035,7 @@ main {
      row on one line at 375 px. */
   .topbar {
     gap: 8px;
-    padding: 14px 12px 6px;
+    padding: 14px 10px 6px;
   }
   .brand {
     font-size: 17px;
@@ -1531,6 +1554,66 @@ main {
 
 .dl-progress {
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------- confirmation ---------------------------- */
+
+.confirm-dialog {
+  /* Tailwind preflight zeroes every margin, and a modal dialog is centred with
+     an auto one. Put it back. */
+  margin: auto;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.cd-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cd-body {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.cd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cd-btn {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cd-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.cd-primary {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 /* ------------------------- reading-style dialog ------------------------- */

@@ -261,7 +261,7 @@ describe("preferences", () => {
 
   it("the install walkthrough opens from the footer", () => {
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "How to add to Home Screen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add to home" }));
     expect(screen.getByRole("heading", { name: /Add to Home Screen/ })).toBeVisible();
     expect(document.querySelectorAll(".help-step")).toHaveLength(3);
   });

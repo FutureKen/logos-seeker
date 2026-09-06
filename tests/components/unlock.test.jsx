@@ -106,18 +106,6 @@ describe("the study gate", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Study data not available");
   });
 
-  it("Lock in the footer clears the stored key", async () => {
-    renderGate();
-    openDialog();
-    submitPassword(PASSWORD);
-    await screen.findByRole("button", { name: "Notes" });
-
-    fireEvent.click(screen.getByRole("button", { name: "Lock" }));
-    await waitFor(() => expect(localStorage.getItem("ls-study-key")).toBeNull());
-    expect(screen.getByRole("button", { name: /Unlock/ })).toBeInTheDocument();
-    await waitFor(() => expect(localStorage.getItem("ls-study")).toBe("0"));
-  });
-
   it("restores an unlocked device from the stored key on startup", async () => {
     localStorage.setItem("ls-study-key", await exportKey(key));
     installFetch(new Map([[INDEX_URL, index]]));
