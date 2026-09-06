@@ -123,6 +123,7 @@
 .sheet-verse,
 .note-card .rt-p,
 .book-info .rt-p,
+.rt-line,
 .otl-title {
   font-family: var(--reading-font);
 }
@@ -1884,9 +1885,11 @@ main {
 .ref-tip {
   position: fixed;
   z-index: 20;
-  max-width: min(340px, calc(100vw - 24px));
+  /* Sized in em so a larger reading size keeps roughly the same number of
+     words per line instead of making a tall, narrow column. */
+  max-width: min(26em, 560px, calc(100vw - 24px));
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: calc(var(--reading-size) - 3px);
   line-height: 1.45;
   color: var(--color-text);
   background: var(--color-panel-2);
@@ -1904,13 +1907,13 @@ main {
 }
 
 .ref-tip.cn {
-  font-size: 14px;
+  font-size: calc(var(--reading-size) - 2px);
   line-height: 1.6;
 }
 
 .rt-head {
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 0.92em;
   font-weight: 700;
   color: var(--color-accent);
 }
@@ -1925,7 +1928,7 @@ main {
 
 .rt-no {
   margin-right: 5px;
-  font-size: 11px;
+  font-size: 0.85em;
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
 }
