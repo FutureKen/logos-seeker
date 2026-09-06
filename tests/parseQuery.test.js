@@ -155,3 +155,58 @@ describe("cnNum", () => {
     expect(cnNum("")).toBeNaN();
   });
 });
+
+/* Several references at once, the way they are quoted in a message or a note. */
+describe("parseQuery — lists of references", () => {
+  const refs = (q) => parseQuery(q, ai).refs;
+
+  it("reads a comma-separated list, in either language's comma", () => {
+    expect(refs("弗五18~19,西三16，来十24~25")).toEqual([
+      { type: "ref", bookIdx: 49, chapter: 5, verse: 18, verseEnd: 19 },
+      { type: "ref", bookIdx: 51, chapter: 3, verse: 16, verseEnd: null },
+      { type: "ref", bookIdx: 58, chapter: 10, verse: 24, verseEnd: 25 },
+    ]);
+  });
+
+  it("reads an English list too", () => {
+    expect(refs("John 1:1, Rom 8:28")).toEqual([
+      { type: "ref", bookIdx: 43, chapter: 1, verse: 1, verseEnd: null },
+      { type: "ref", bookIdx: 45, chapter: 8, verse: 28, verseEnd: null },
+    ]);
+  });
+
+  it("carries the chapter over to a bare verse", () => {
+    expect(refs("西三16，17")).toEqual([
+      { type: "ref", bookIdx: 51, chapter: 3, verse: 16, verseEnd: null },
+      { type: "ref", bookIdx: 51, chapter: 3, verse: 17, verseEnd: null },
+    ]);
+    expect(refs("John 1:1, 3")[1]).toMatchObject({ bookIdx: 43, chapter: 1, verse: 3 });
+  });
+
+  it("carries the book over to a bare chapter", () => {
+    expect(refs("弗五18，六1")).toEqual([
+      { type: "ref", bookIdx: 49, chapter: 5, verse: 18, verseEnd: null },
+      { type: "ref", bookIdx: 49, chapter: 6, verse: 1, verseEnd: null },
+    ]);
+  });
+
+  it("accepts the enumeration comma and the semicolon", () => {
+    expect(refs("创一1、二3")).toHaveLength(2);
+    expect(refs("创一1；二3")).toHaveLength(2);
+  });
+
+  it("tolerates a trailing separator, which leaves one reference", () => {
+    expect(parseQuery("西三16,", ai)).toMatchObject({
+      type: "ref",
+      bookIdx: 51,
+      chapter: 3,
+      verse: 16,
+    });
+  });
+
+  it("leaves ordinary text with a comma to the word search", () => {
+    for (const q of ["love, joy", "爱，喜乐", "西三16, love"]) {
+      expect(parseQuery(q, ai).type).toBe("word");
+    }
+  });
+});

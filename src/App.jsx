@@ -51,6 +51,21 @@ export function computeResult(bs, ready, query) {
     return { kind: "fuzzy", items, bookIdx: parsed.bookIdx };
   }
 
+  // Several references at once read as one list, in the order they were typed.
+  if (parsed.type === "refs") {
+    const seen = new Set();
+    const rows = [];
+    for (const ref of parsed.refs) {
+      for (const i of bs.lookupReference(ref)) {
+        if (seen.has(i)) continue;
+        seen.add(i);
+        rows.push(i);
+      }
+    }
+    if (!rows.length) return { kind: "notfound" };
+    return { kind: "ref", rows, total: rows.length };
+  }
+
   if (parsed.type === "ref") {
     const rows = bs.lookupReference(parsed);
     if (!rows.length) return { kind: "notfound" };

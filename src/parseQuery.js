@@ -11,9 +11,14 @@
  *                   (the compact form the Recovery Version prints: a Chinese
  *                    numeral chapter run straight into an Arabic verse)
  *
+ * Several references at once, separated by commas:
+ *   弗五18~19,西三16，来十24~25      John 1:1, Rom 8:28
+ *   西三16，17    (a bare number continues the chapter before it)
+ *   弗五18，六1    (a chapter alone continues the book before it)
+ *
  * Public API:
  *   buildAliasIndex(books) -> aliasIndex   (call once after books.json loads)
- *   parseQuery(raw, aliasIndex) -> { type:'ref'|'word', ... }
+ *   parseQuery(raw, aliasIndex) -> { type:'ref'|'refs'|'word', ... }
  */
 
 /** Does the string contain any CJK ideograph? */
@@ -118,6 +123,8 @@ function normalizeEn(s) {
  * Heb 11:1, or Heb chapter 11 and Heb 1:1).
  */
 export function parseReference(raw, aliasIndex) {
+  // Called before the book table has loaded: nothing can be a reference yet.
+  if (!aliasIndex) return null;
   const q = raw.trim();
   if (!q) return null;
 
@@ -279,12 +286,88 @@ function makeRef(bookIdx, nums, aliasIndex) {
   };
 }
 
+/** What separates one reference from the next, in either language. */
+const REF_SEPARATORS = /[,，、;；]/;
+
+/** A fuzzy parse inside a list is settled by taking its first reading. */
+function settle(ref, aliasIndex) {
+  if (!ref) return null;
+  if (!ref.fuzzy) return ref;
+  const c = ref.candidates?.[0];
+  if (!c) return null;
+  return makeRef(
+    c.bookIdx,
+    { chapter: c.chapter, verse: c.verse ?? null, verseEnd: null },
+    aliasIndex,
+  );
+}
+
+/**
+ * One item of a comma-separated list. A item that names no book carries on
+ * from the one before it, the way a printed reference does: a bare number is
+ * another verse of the same chapter, and a chapter is another chapter of the
+ * same book.
+ */
+function parseListItem(part, prev, aliasIndex) {
+  const direct = settle(parseReference(part, aliasIndex), aliasIndex);
+  if (direct) return direct;
+  if (!prev) return null;
+
+  const t = normalizeCnPunct(part);
+  const verses = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(t);
+  if (verses) {
+    return makeRef(
+      prev.bookIdx,
+      {
+        chapter: prev.chapter,
+        verse: Number(verses[1]),
+        verseEnd: verses[2] != null ? Number(verses[2]) : null,
+      },
+      aliasIndex,
+    );
+  }
+  // A chapter of the same book: "六1", "6:1" — but not bare digits, which the
+  // rule above already read as verses.
+  if (/^\d+$/.test(t)) return null;
+  return settle(parseCnRest(prev.bookIdx, t, aliasIndex), aliasIndex);
+}
+
+/**
+ * Parse "弗五18~19,西三16，来十24~25" into a list of references. Returns null
+ * unless every item is one, so ordinary text with a comma in it ("love, joy")
+ * still falls through to the word search.
+ */
+export function parseReferenceList(raw, aliasIndex) {
+  if (!aliasIndex) return null;
+  const q = String(raw ?? "");
+  if (!REF_SEPARATORS.test(q)) return null;
+  const parts = q
+    .split(REF_SEPARATORS)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (!parts.length) return null;
+
+  const refs = [];
+  let prev = null;
+  for (const part of parts) {
+    const ref = parseListItem(part, prev, aliasIndex);
+    if (!ref) return null;
+    refs.push(ref);
+    prev = ref;
+  }
+  // A stray trailing comma leaves one reference, which is not a list.
+  if (refs.length === 1) return refs[0];
+  return { type: "refs", refs };
+}
+
 /**
  * Top-level: returns a reference descriptor, or a word-search descriptor.
  * Word search carries the detected language so the caller searches the right
  * text column.
  */
 export function parseQuery(raw, aliasIndex) {
+  const list = parseReferenceList(raw, aliasIndex);
+  if (list) return list;
   const ref = parseReference(raw, aliasIndex);
   if (ref) return ref;
   const term = raw.trim();
