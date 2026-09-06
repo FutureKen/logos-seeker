@@ -1174,10 +1174,20 @@ main {
   user-select: none;
   -webkit-user-select: none;
   border-radius: 4px;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
 }
 
+/* The verse row lights up on hover as well, so a marker cannot answer with
+   another shade of panel: it takes the accent outright, and its digits and
+   letters turn to read against it. */
 .mk:hover {
-  background: var(--color-panel-2);
+  background: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.mk:hover .mk-n,
+.mk:hover .mk-x {
+  color: #fff;
 }
 
 .mk-n {
