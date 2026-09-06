@@ -19,11 +19,48 @@ function studyVersion() {
   }
 }
 
+const STUDY_CACHE = `study-${studyVersion()}`;
+
+/**
+ * A rebuild of the study data changes the cache name, and the cache under the
+ * old name would otherwise sit on the device for good, holding megabytes
+ * nobody can reach. Workbox sweeps its own outdated precaches but knows
+ * nothing about a runtime cache, so the service worker imports these few lines
+ * and does it on activate. The name to keep is baked in at build time: it is
+ * inside the versioned cache itself, so the worker cannot look it up.
+ */
+function studyCacheSweeper() {
+  const source = [
+    "// Generated at build time — see studyCacheSweeper() in vite.config.js.",
+    `const KEEP = ${JSON.stringify(STUDY_CACHE)};`,
+    "self.addEventListener('activate', (event) => {",
+    "  event.waitUntil(",
+    "    caches.keys().then((names) =>",
+    "      Promise.all(",
+    "        names",
+    "          .filter((name) => name.startsWith('study-') && name !== KEEP)",
+    "          .map((name) => caches.delete(name)),",
+    "      ),",
+    "    ),",
+    "  );",
+    "});",
+    "",
+  ].join("\n");
+  return {
+    name: "study-cache-sweeper",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "study-sweep.js", source });
+    },
+  };
+}
+
 export default defineConfig({
   base: "./",
   plugins: [
     react(),
     tailwindcss(),
+    studyCacheSweeper(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
@@ -36,12 +73,14 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
+        // Sweeps study caches left behind by an earlier data version.
+        importScripts: ["study-sweep.js"],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.includes("/data/study/"),
             handler: "CacheFirst",
             options: {
-              cacheName: `study-${studyVersion()}`,
+              cacheName: STUDY_CACHE,
               cacheableResponse: { statuses: [0, 200] },
             },
           },
