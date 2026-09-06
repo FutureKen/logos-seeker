@@ -51,6 +51,8 @@ export function initState() {
     font: isFont(savedFont) ? savedFont : "system",
     fontSize: clampSize(readLS("ls-font-size") ?? SIZE.default),
     interlinear: readLS("ls-interlinear") === "1",
+    /** Set by "back" to restore (or close) the study sheet; see App.jsx. */
+    pendingSheet: null,
     /** The Notes toggle. Only meaningful once `unlocked`. */
     study: readLS("ls-study") === "1",
     unlocked: false,
@@ -141,7 +143,13 @@ export function reducer(state, a) {
       const navStack = a.push
         ? [
             ...state.navStack,
-            { view: state.view, wordShown: state.wordShown, scrollY: a.scrollY ?? 0 },
+            {
+              view: state.view,
+              wordShown: state.wordShown,
+              scrollY: a.scrollY ?? 0,
+              // What the study sheet was showing, so going back can put it back.
+              sheet: a.sheet ?? null,
+            },
           ]
         : state.navStack;
       return { ...state, view, navStack, seq: state.seq + 1 };
@@ -163,6 +171,9 @@ export function reducer(state, a) {
         navStack,
         wordShown: entry.wordShown,
         pendingScroll: entry.scrollY,
+        // Reopen the sheet the reader left, or shut one they have moved past.
+        // The nonce makes every step back a distinct instruction to obey.
+        pendingSheet: { ...(entry.sheet ?? { close: true }), nonce: state.seq + 1 },
         seq: state.seq + 1,
       };
     }

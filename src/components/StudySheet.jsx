@@ -29,6 +29,7 @@ export default function StudySheet({
   getVerseText,
   onClose,
   onGoto,
+  onNavState,
 }) {
   const dialogRef = useRef(null);
   const bodyRef = useRef(null);
@@ -49,6 +50,14 @@ export default function StudySheet({
     setSheetLang(request.lang ?? lang);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request]);
+
+  // The sheet moves under the reader's feet — another note, another tab,
+  // the other language — so it reports where it stands. Following a reference
+  // out of here remembers that, and coming back puts it up again unchanged.
+  useEffect(() => {
+    if (!open || !req) return;
+    onNavState?.({ req, tab, lang: sheetLang });
+  }, [open, req, tab, sheetLang, onNavState]);
 
   useEffect(() => {
     const d = dialogRef.current;

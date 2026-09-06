@@ -407,4 +407,56 @@ describe("study sheet", () => {
     fireEvent.click(back);
     await waitFor(() => expect(screen.getByText("Genesis 1")).toBeInTheDocument());
   });
+
+  it("coming back from a reference puts the sheet up again on the same card", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    fireEvent.click(verseEl(1).querySelectorAll(".mk")[1]);
+    await waitFor(() => expect(sheet().open).toBe(true));
+    expect(document.querySelector(".note-card.focused").dataset.card).toBe("1");
+
+    fireEvent.click(document.querySelector(".note-card .ref-link"));
+    await waitFor(() => expect(screen.getByText("John 1")).toBeInTheDocument());
+    expect(sheet().open).toBe(false);
+
+    fireEvent.click(document.getElementById("back-to-results"));
+    await waitFor(() => expect(screen.getByText("Genesis 1")).toBeInTheDocument());
+    await waitFor(() => expect(sheet().open).toBe(true));
+    expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:1");
+    expect(document.querySelector(".note-card.focused").dataset.card).toBe("1");
+  });
+
+  it("the tab the reader left is the tab they come back to", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    fireEvent.click(screen.getByRole("button", { name: "Outline" }));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    const entries = [...document.querySelectorAll(".otl-item .otl-btn")];
+    fireEvent.click(entries[entries.length - 1]);
+    await waitFor(() => expect(sheet().open).toBe(false));
+
+    fireEvent.click(document.getElementById("back-to-results"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    expect(within(sheet()).getByRole("tab", { name: "Outline" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("going back past the chapter it belongs to closes the sheet", async () => {
+    unlockedSession();
+    render(<App />);
+    search("beginning");
+    await waitFor(() => expect(document.querySelectorAll(".verse").length).toBeGreaterThan(0));
+
+    fireEvent.click(document.querySelector(".verse .ref"));
+    await waitFor(() => expect(verseEl(1)?.querySelector(".mk")).not.toBeNull());
+    fireEvent.click(verseEl(1).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+
+    fireEvent.click(document.getElementById("back-to-results"));
+    await waitFor(() => expect(sheet().open).toBe(false));
+  });
 });

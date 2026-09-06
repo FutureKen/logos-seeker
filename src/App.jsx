@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import AppProvider, { useApp } from "./state/AppProvider.jsx";
 import { useBible } from "./hooks/useBible.js";
 import { useHashQuery } from "./hooks/useHashQuery.js";
@@ -199,6 +199,9 @@ function Shell() {
   );
   const bookStudy = useStudyBook(chapterRef?.book ?? null, studyOn);
   const [sheet, setSheet] = useState({ open: false, request: null });
+  // The sheet's own live state (which note, which tab, which language), kept in
+  // a ref so following a reference can put it on the nav stack.
+  const sheetState = useRef(null);
 
   const studyState = !studyOn
     ? "off"
@@ -227,6 +230,7 @@ function Shell() {
   const goto = useCallback(
     (ref) => {
       if (!Array.isArray(ref)) return;
+      const openSheet = sheet.open ? sheetState.current : null;
       setSheet((s) => (s.open ? { ...s, open: false } : s));
       const [b, c, v] = ref;
       let focusVerse = v || null;
@@ -240,10 +244,32 @@ function Shell() {
           return; // no such chapter — better to stay put than to blank the view
         }
       }
-      actions.openChapter({ book: b, chapter: c, focusVerse, scroll: "verse", push: true });
+      actions.openChapter({
+        book: b,
+        chapter: c,
+        focusVerse,
+        scroll: "verse",
+        push: true,
+        sheet: openSheet,
+      });
     },
-    [bs, actions],
+    [bs, actions, sheet.open],
   );
+
+  // Going back reopens the sheet that was up when the reader followed a
+  // reference away, on the same note, tab and language.
+  const pendingSheet = state.pendingSheet;
+  useEffect(() => {
+    if (!pendingSheet) return;
+    if (pendingSheet.close || !pendingSheet.req) {
+      setSheet((s) => (s.open ? { ...s, open: false } : s));
+      return;
+    }
+    setSheet({
+      open: true,
+      request: { ...pendingSheet.req, kind: pendingSheet.tab, lang: pendingSheet.lang },
+    });
+  }, [pendingSheet]);
 
   const goSibling = useCallback(
     (rowIdx) => {
@@ -364,6 +390,9 @@ function Shell() {
           getVerseText={getVerseText}
           onClose={() => setSheet((s) => ({ ...s, open: false }))}
           onGoto={goto}
+          onNavState={(st) => {
+            sheetState.current = st;
+          }}
         />
       ) : null}
       <DeselectButton />
