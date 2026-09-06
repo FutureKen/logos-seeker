@@ -575,6 +575,10 @@ main {
   background: transparent;
 }
 
+.chapter-block .verse .copy-btn {
+  align-self: flex-start;
+}
+
 .chapter-block .verse:hover {
   background: var(--color-panel-2);
 }
@@ -1031,6 +1035,15 @@ main {
   .verse .text {
     font-size: calc(var(--reading-size) - 1px);
     flex-basis: 100%;
+  }
+  /* A chapter verse carries no reference badge beside the copy button, so
+     dropping its text to a line of its own would strand the button on one.
+     Keep it at the head of the verse instead. */
+  .chapter-block .verse {
+    flex-wrap: nowrap;
+  }
+  .chapter-block .verse .text {
+    flex-basis: auto;
   }
   /* The top bar gained the study-gate pill, so tighten everything to keep the
      row on one line at 375 px. */
