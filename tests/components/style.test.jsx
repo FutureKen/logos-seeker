@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AppProvider from "../../src/state/AppProvider.jsx";
 import TopBar from "../../src/components/TopBar.jsx";
+import { SIZES } from "../../src/lib/style.js";
 import { installDomStubs, installFetch, resetEnvironment } from "./helpers.js";
 
 /** jsdom answers every media query with `false`; say what the OS prefers. */
@@ -84,36 +85,62 @@ describe("reading style", () => {
     await waitFor(() => expect(localStorage.getItem("ls-font")).toBe("serif"));
   });
 
-  it("changes the text size with the slider and the step buttons", async () => {
+  it("changes the text size with the slider", async () => {
     renderBar();
     openStyle();
     const size = () => root().style.getPropertyValue("--reading-size");
     expect(size()).toBe("16px");
 
+    // The slider runs along the ladder, so its value is a rung, not a pixel.
     fireEvent.change(screen.getByRole("slider", { name: "Text size" }), {
-      target: { value: "20" },
+      target: { value: String(SIZES.indexOf(22)) },
     });
-    expect(size()).toBe("20px");
-    await waitFor(() => expect(localStorage.getItem("ls-font-size")).toBe("20"));
+    expect(size()).toBe("22px");
+    await waitFor(() => expect(localStorage.getItem("ls-font-size")).toBe("22"));
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "Larger text" }));
-    expect(size()).toBe("21px");
-    fireEvent.click(screen.getByRole("button", { name: "Smaller text" }));
+  it("steps by one pixel below 18 and by two above it", () => {
+    localStorage.setItem("ls-font-size", "16");
+    renderBar();
+    openStyle();
+    const size = () => root().style.getPropertyValue("--reading-size");
+    const bigger = () => fireEvent.click(screen.getByRole("button", { name: "Larger text" }));
+    const smaller = () => fireEvent.click(screen.getByRole("button", { name: "Smaller text" }));
+
+    bigger();
+    expect(size()).toBe("17px");
+    bigger();
+    expect(size()).toBe("18px");
+    bigger();
     expect(size()).toBe("20px");
+    bigger();
+    expect(size()).toBe("22px");
+    smaller();
+    expect(size()).toBe("20px");
+    smaller();
+    expect(size()).toBe("18px");
+    smaller();
+    expect(size()).toBe("17px");
   });
 
   it("stops at the ends of the size range", () => {
-    localStorage.setItem("ls-font-size", "24");
+    localStorage.setItem("ls-font-size", "28");
     renderBar();
     openStyle();
     expect(screen.getByRole("button", { name: "Larger text" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Smaller text" }));
-    expect(root().style.getPropertyValue("--reading-size")).toBe("23px");
+    expect(root().style.getPropertyValue("--reading-size")).toBe("26px");
+  });
+
+  it("snaps a stored size that is off the ladder", () => {
+    localStorage.setItem("ls-font-size", "19");
+    renderBar();
+    expect(root().style.getPropertyValue("--reading-size")).toBe("20px");
   });
 
   it("ignores a stored size that is out of range", () => {
     localStorage.setItem("ls-font-size", "99");
     renderBar();
-    expect(root().style.getPropertyValue("--reading-size")).toBe("24px");
+    expect(root().style.getPropertyValue("--reading-size")).toBe("28px");
   });
 });

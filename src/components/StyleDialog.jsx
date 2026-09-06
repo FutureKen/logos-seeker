@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useApp } from "../state/AppProvider.jsx";
-import { SCHEMES, FONTS, SIZE } from "../lib/style.js";
+import { SCHEMES, FONTS, SIZE, SIZES, sizeIndex, stepSize } from "../lib/style.js";
 import { tr } from "../lib/i18n.js";
 
 /**
@@ -104,19 +104,22 @@ export default function StyleDialog({ open, onClose }) {
               aria-label={t.smaller}
               title={t.smaller}
               disabled={state.fontSize <= SIZE.min}
-              onClick={() => actions.setFontSize(state.fontSize - SIZE.step)}
+              onClick={() => actions.setFontSize(stepSize(state.fontSize, -1))}
             >
               A<span className="sd-step-sign">−</span>
             </button>
+            {/* The slider runs along the ladder, not along pixels, because the
+                steps are not all the same width. */}
             <input
               type="range"
               className="sd-range"
-              min={SIZE.min}
-              max={SIZE.max}
-              step={SIZE.step}
-              value={state.fontSize}
+              min={0}
+              max={SIZES.length - 1}
+              step={1}
+              value={sizeIndex(state.fontSize)}
               aria-label={t.textSize}
-              onChange={(e) => actions.setFontSize(Number(e.target.value))}
+              aria-valuetext={`${state.fontSize}px`}
+              onChange={(e) => actions.setFontSize(SIZES[Number(e.target.value)])}
             />
             <button
               type="button"
@@ -124,7 +127,7 @@ export default function StyleDialog({ open, onClose }) {
               aria-label={t.larger}
               title={t.larger}
               disabled={state.fontSize >= SIZE.max}
-              onClick={() => actions.setFontSize(state.fontSize + SIZE.step)}
+              onClick={() => actions.setFontSize(stepSize(state.fontSize, 1))}
             >
               A<span className="sd-step-sign">+</span>
             </button>
