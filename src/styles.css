@@ -991,6 +991,44 @@ main {
 /* ---------------------------- floating bits ---------------------------- */
 
 /* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+/* Back to top: it floats over the text it is covering, so it stays faint
+   until the pointer arrives, and it leaves room for the selection pill in the
+   middle of the same edge. */
+.scroll-top {
+  position: fixed;
+  right: 14px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.4;
+  backdrop-filter: blur(3px);
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.scroll-top:hover,
+.scroll-top:focus-visible {
+  opacity: 0.95;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* A touch screen has no hover to reveal it, so keep it a little more visible. */
+@media (hover: none) {
+  .scroll-top {
+    opacity: 0.55;
+  }
+}
+
 .deselect-btn {
   position: fixed;
   left: 50%;

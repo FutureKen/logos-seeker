@@ -56,6 +56,7 @@ const en = {
     kai: "Kai",
   },
   installLink: "Add to home",
+  scrollTop: "Back to top",
   abbrevLink: "Book name abbreviations",
   abbrevTitle: "Book name abbreviations",
   abbrevIntro:
@@ -148,6 +149,7 @@ const cn = {
   nextChapter: "下一章",
   deselect: (n) => `取消选择 (${n})`,
   installLink: "添加到主屏",
+  scrollTop: "回到顶部",
   abbrevLink: "书卷简称",
   abbrevTitle: "书卷简称",
   abbrevIntro: "搜索框接受下列任一写法，中英文皆可，不分大小写。",
