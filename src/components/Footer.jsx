@@ -37,7 +37,12 @@ export default function Footer() {
           >
             Recovery Version
           </a>{" "}
-          <span className="muted">© Living Stream Ministry</span>
+          <span className="muted">
+            ©{" "}
+            <a href="https://www.lsm.org/" target="_blank" rel="noopener noreferrer">
+              Living Stream Ministry
+            </a>
+          </span>
         </span>
         <span className="muted">{t.personalUse}</span>
         <DownloadStudy />
