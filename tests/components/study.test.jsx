@@ -278,7 +278,7 @@ describe("chapter view with study on", () => {
   it("copies the plain verse text, without any marker labels", async () => {
     unlockedSession();
     await openGenesis1();
-    fireEvent.click(verseEl(1).querySelector(".copy-btn"));
+    fireEvent.dblClick(verseEl(1).querySelector(".text"));
     await waitFor(() =>
       expect(clipboard).toHaveBeenLastCalledWith(
         "Genesis 1:1  In the beginning God created the heavens and the earth.",
@@ -349,6 +349,47 @@ describe("study sheet", () => {
     expect(cards()).toHaveLength(3);
     expect(cards()[0].textContent).toContain("Placeholder note text for the repeated marker");
     expect(cards()[2].querySelector(".nc-repeat").textContent).toBe("Same as note 1 above");
+  });
+
+  it("double-clicking a note card copies that one note", async () => {
+    unlockedSession();
+    await openGenesis1();
+    fireEvent.click(verseEl(1).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+
+    fireEvent.dblClick(cards()[0]);
+    await waitFor(() =>
+      expect(clipboard).toHaveBeenLastCalledWith(
+        [
+          "Genesis 1:1  1a  In",
+          "cf. John 1:1-2",
+          "Placeholder note text for marker 1 with a reference link John 1:1.",
+        ].join("\n"),
+      ),
+    );
+    expect(await screen.findByText("Footnote copied")).toBeInTheDocument();
+
+    // A marker that only carries cross-references copies just those.
+    fireEvent.dblClick(cards()[2]);
+    await waitFor(() =>
+      expect(clipboard).toHaveBeenLastCalledWith(
+        "Genesis 1:1  b  God\nZech. 12:1; Psa. 33:6",
+      ),
+    );
+  });
+
+  it("a repeated marker copies the pointer back, not the prose again", async () => {
+    unlockedSession();
+    await openGenesis1();
+    fireEvent.click(verseEl(2).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+
+    fireEvent.dblClick(cards()[2]);
+    await waitFor(() =>
+      expect(clipboard).toHaveBeenLastCalledWith(
+        "Genesis 1:2  1  Spirit\nSame as note 1 above",
+      ),
+    );
   });
 
   it("flips only the sheet between EN and 中", async () => {

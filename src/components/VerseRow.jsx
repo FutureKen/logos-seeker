@@ -1,11 +1,10 @@
-import CopyButton from "./CopyButton.jsx";
 import { useSelectPulse } from "../hooks/useSelectPulse.js";
-import { cnMissing, splitHighlight, textFor } from "../lib/format.js";
+import { cnMissing, splitHighlight, tapToCopy, textFor } from "../lib/format.js";
 import { tr } from "../lib/i18n.js";
 
 /**
- * One compact result row: [copy] [ref] text, on a single line. Tapping the ref
- * opens the full chapter; tapping the text toggles selection.
+ * One compact result row: [ref] text. Tapping the ref opens the full chapter;
+ * tapping the text toggles selection and double-clicking it copies the verse.
  */
 export default function VerseRow({
   row,
@@ -31,7 +30,6 @@ export default function VerseRow({
       }
       data-verse={refLabel}
     >
-      <CopyButton onCopy={onCopy} label={t.copyAria} title={t.copy} />
       <span
         className="ref"
         role="button"
@@ -47,7 +45,7 @@ export default function VerseRow({
       >
         {refLabel}
       </span>
-      <span className="text" onClick={onToggleSelect}>
+      <span className="text" {...tapToCopy(onToggleSelect, onCopy)}>
         {parts.map((p, i) => (p.mark ? <mark key={i}>{p.s}</mark> : p.s))}
         {cnMissing(row, lang) ? <span className="alt-note"> {t.enVersification}</span> : null}
       </span>

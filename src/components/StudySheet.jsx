@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useStudyChapter, pickHalf } from "../hooks/useStudyChapter.js";
 import { useStudyBook } from "../hooks/useStudyBook.js";
 import { formatRef } from "../study/refFormat.js";
+import { noteToText } from "../study/noteText.js";
+import { tapToCopy, writeClipboard } from "../lib/format.js";
 import { tr } from "../lib/i18n.js";
+import { useToast } from "./Toast.jsx";
 import RichText from "./RichText.jsx";
 import RefTooltip from "./RefTooltip.jsx";
 import { refAttr } from "../study/refText.js";
@@ -33,6 +36,7 @@ export default function StudySheet({
 }) {
   const dialogRef = useRef(null);
   const bodyRef = useRef(null);
+  const showToast = useToast();
   const [req, setReq] = useState(request ?? null);
   const [tab, setTab] = useState(request?.kind ?? "verse");
   const [sheetLang, setSheetLang] = useState(request?.lang ?? lang);
@@ -106,6 +110,13 @@ export default function StudySheet({
     onGoto?.(ref);
   }
 
+  /** Double-clicking a note card puts that one note on the clipboard. */
+  async function copyNote(text) {
+    if (!text) return;
+    await writeClipboard(text);
+    showToast(ts.copiedNote);
+  }
+
   /** A `{note}` run: show that note, fetching its chapter if need be. */
   function openNote(note) {
     if (!Array.isArray(note)) return;
@@ -116,6 +127,9 @@ export default function StudySheet({
 
   const bookName = bookByIdx?.get?.(req?.book);
   const bookLabel = bookName ? (sheetLang === "cn" ? bookName.cn || bookName.en : bookName.en) : "";
+  const verseLabel = hasVerse
+    ? formatRef([req.book, req.chapter, req.verse, 0], sheetLang, bookByIdx)
+    : "";
   const title =
     req == null
       ? ts.studySheet
@@ -123,9 +137,7 @@ export default function StudySheet({
         ? bookLabel
         : tab === "outline"
           ? `${bookLabel} ${req.chapter ?? ""}`.trim()
-          : hasVerse
-            ? formatRef([req.book, req.chapter, req.verse, 0], sheetLang, bookByIdx)
-            : bookLabel;
+          : verseLabel || bookLabel;
 
   const fallbackLang =
     (tab === "verse" && ch.fallback && ch.lang) || (tab !== "verse" && bk.fallback && bk.lang);
@@ -201,9 +213,11 @@ export default function StudySheet({
             status={chapter.status}
             focus={focus}
             ts={ts}
+            refLabel={verseLabel}
             onMarker={(i) => setReq((r) => ({ ...r, focus: { marker: i } }))}
             onGoto={goto}
             onNote={openNote}
+            onCopyNote={copyNote}
           />
         ) : null}
         {tab === "outline" ? (
@@ -262,7 +276,20 @@ function focusIndex(apparatus, focus) {
 
 /* ------------------------------- Verse tab ------------------------------- */
 
-function VerseTab({ req, apparatus, text, halfLang, status, focus, ts, onMarker, onGoto, onNote }) {
+function VerseTab({
+  req,
+  apparatus,
+  text,
+  halfLang,
+  status,
+  focus,
+  ts,
+  refLabel,
+  onMarker,
+  onGoto,
+  onNote,
+  onCopyNote,
+}) {
   if (status === "loading") return <p className="sheet-status">{ts.studyLoading}</p>;
   if (status === "error") return <p className="sheet-status">{ts.studyError}</p>;
 
@@ -291,8 +318,10 @@ function VerseTab({ req, apparatus, text, halfLang, status, focus, ts, onMarker,
             halfLang={halfLang}
             focused={i === focus}
             ts={ts}
+            refLabel={refLabel}
             onGoto={onGoto}
             onNote={onNote}
+            onCopy={onCopyNote}
           />
         ))
       ) : (
@@ -318,8 +347,10 @@ function NoteCard({
   halfLang,
   focused,
   ts,
+  refLabel,
   onGoto,
   onNote,
+  onCopy,
 }) {
   const xrefs = marker.x != null ? apparatus?.x?.[marker.x] : null;
   const note = marker.n != null ? apparatus?.n?.[String(marker.n)] : null;
@@ -333,7 +364,23 @@ function NoteCard({
   const word = anchorWord(marker, text, halfLang);
 
   return (
-    <div className={`note-card${focused ? " focused" : ""}`} data-card={index}>
+    <div
+      className={`note-card${focused ? " focused" : ""}`}
+      data-card={index}
+      {...tapToCopy(null, () =>
+        onCopy?.(
+          noteToText({
+            ref: refLabel,
+            label: marker.l,
+            word,
+            xrefs,
+            note,
+            repeatOf: repeat ? marker.n : null,
+            t: ts,
+          }),
+        ),
+      )}
+    >
       <div className="nc-head">
         <span className="nc-label">{marker.l}</span>
         {word ? <span className="nc-word">{word}</span> : null}

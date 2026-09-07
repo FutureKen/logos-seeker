@@ -44,10 +44,14 @@ type Segment = { t: string } | { m: number; l: string; x: boolean; floating?: bo
   scrollKey?: number | string;  // changing it re-runs the entry scroll
 
   selected: Set<string>;        // "book:chapter:verse" keys
-  onToggleSelect(key: string): void;
-  onCopy(row: Row): void;       // copies that verse, or the whole selection
-  canPrev: boolean; canNext: boolean;  // false ⇒ the arrow renders disabled
-  onPrev(): void; onNext(): void;
+  onToggleSelect(key: string): void;   // a single click on the verse text
+  onCopy(row: Row): void;              // a double-click on it — that verse alone
+  canPrev: boolean; canNext: boolean;  // false ⇒ the header arrow renders disabled
+                                       //   and the chapter-end button is absent
+  prevLabel?: string | null;    // the destination, already resolved for `lang`:
+  nextLabel?: string | null;    //   "Genesis 5" / "创世记 5"; crosses book ends
+  onPrev(): void; onNext(): void;      // shared by the header arrows, the ←/→
+                                       //   keys, the chapter-end row and the swipe
   onToggleInterlinear(): void;
   onGoto(ref: Ref): void;       // reference link → push nav stack, render target
 
@@ -65,14 +69,26 @@ type Segment = { t: string } | { m: number; l: string; x: boolean; floating?: bo
 `scroll` decides what happens when the view is entered: `"verse"` lands on
 `focusVerse` just below the sticky search bar and flashes it (or starts at the
 chapter heading when `focusVerse` is null or the chapter's first verse);
-`"top"` is what prev/next use; `"none"` is a restored view (the back button
-puts the remembered scroll position back instead).
+`"top"` is what prev/next use, and it jumps **instantly** — prev/next arrives at
+a new chapter from the foot of the old one, where a smooth scroll crawls and
+animates across text the reader never saw; `"none"` is a restored view (the back
+button puts the remembered scroll position back instead).
 
 `ChapterView` renders the header (title, prev/next, Interlinear toggle, and —
 when `study` — the "Outline / 纲目" and "Book / 简介" buttons), the book-info card
 on chapter 1, and one `VerseText` per verse per rendered language.
 
+A second prev/next pair closes the block (`.chapter-end`), naming its
+destination from `prevLabel` / `nextLabel` and omitted altogether at the ends of
+the canon — the header arrows have scrolled away by the time a reader wants
+them. On a touch screen a horizontal flick across `.chapter-block` calls the
+same `onPrev` / `onNext` (`src/hooks/useSwipeNav.js`); it is gated on touch
+events alone, so a mouse never reaches it.
+
 ### Where D plugs in
+
+> Stale: `PlainVerseText` is gone and `VerseText` is already wired. Left here
+> until someone rewrites the section.
 
 `ChapterView.jsx` currently renders `PlainVerseText` (defined at the top of the
 same file, marked `STUDY SLOT`) inside `ChapterVerse`. Swap that one JSX tag for
@@ -101,6 +117,11 @@ Outline / Book buttons go, and `BookInfoCard` belongs directly above the first
 Renders `splitText(text, apparatus?.m ?? [], heads ?? [])`. Markers are
 `<sup>` elements: numeric labels use `--color-accent`, letters use
 `--color-muted` italic. Copy/select must yield the plain text without markers.
+
+Copying is by double-click throughout — a verse in either view, or a note card
+in the sheet (`src/study/noteText.js` renders one as plain text). Every copy is
+confirmed by the toast in `src/components/Toast.jsx`; `SelectionBar` copies the
+whole selection instead, and only appears once two or more verses are picked.
 
 ## `<StudySheet>` — owned by D
 
@@ -188,7 +209,7 @@ building their own. Study data must only be fetched when
 
 Other C-owned pieces D may reuse: `src/lib/i18n.js` (`tr(lang)` string table,
 `HELP_STEPS`), `src/lib/format.js` (`splitHighlight`, `textFor`, `cnMissing`,
-`verseKey`, `verseToText`, `writeClipboard`), `src/hooks/useLocalStorage.js`
+`verseKey`, `verseToText`, `writeClipboard`, `tapToCopy`), `src/hooks/useLocalStorage.js`
 (`readLS` / `writeLS` / `useLocalStorage`), `src/hooks/useBible.js`
 (`useBible(enabled)`, `getBible()`), `src/hooks/useSelectPulse.js`.
 `NotesToggle.jsx` is the placeholder for D's `StudyToggle`; it is rendered by

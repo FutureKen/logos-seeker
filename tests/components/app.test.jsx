@@ -130,33 +130,63 @@ describe("results", () => {
 });
 
 describe("selection and copying", () => {
-  it("copies one verse, or the whole selection once verses are picked", async () => {
+  it("double-clicking a verse copies that verse alone", async () => {
     render(<App />);
     search("John 1:1-3");
     await waitFor(() => expect(status()).toBe("3 results"));
 
-    // No selection → the clicked row only.
-    fireEvent.click(within(rows()[0]).getByRole("button", { name: "Copy verse" }));
+    fireEvent.dblClick(within(rows()[0]).getByText(/In the beginning was the Word/));
     await waitFor(() =>
       expect(clipboard).toHaveBeenLastCalledWith(
         expect.stringMatching(/^John 1:1 {2}In the beginning was the Word/),
       ),
     );
+    expect(await screen.findByText("Verse copied")).toBeInTheDocument();
+  });
 
-    // Tapping the text selects; two selected rows raise the deselect pill.
+  it("copies the whole selection from the bar, and only the selection", async () => {
+    render(<App />);
+    search("John 1:1-3");
+    await waitFor(() => expect(status()).toBe("3 results"));
+
+    // Tapping the text selects; two selected rows raise the selection bar.
     fireEvent.click(within(rows()[0]).getByText(/In the beginning was the Word/));
     fireEvent.click(within(rows()[1]).getByText(/He was in the beginning with God/));
     const deselect = await screen.findByRole("button", { name: "Deselect all (2)" });
 
-    fireEvent.click(within(rows()[2]).getByRole("button", { name: "Copy verse" }));
-    await waitFor(() => expect(clipboard).toHaveBeenCalledTimes(2));
+    fireEvent.click(screen.getByRole("button", { name: "Copy the 2 selected verses" }));
+    await waitFor(() => expect(clipboard).toHaveBeenCalledTimes(1));
     const copied = clipboard.mock.calls.at(-1)[0];
     expect(copied.split("\n")).toHaveLength(2);
     expect(copied).toMatch(/^John 1:1 {2}/);
     expect(copied).toContain("\nJohn 1:2  ");
+    expect(await screen.findByText("2 verses copied")).toBeInTheDocument();
 
     fireEvent.click(deselect);
     expect(screen.queryByRole("button", { name: /Deselect all/ })).toBeNull();
+  });
+
+  it("leaves the selection untouched when a verse is double-clicked", async () => {
+    render(<App />);
+    search("John 1:1-3");
+    await waitFor(() => expect(status()).toBe("3 results"));
+
+    fireEvent.click(within(rows()[0]).getByText(/In the beginning was the Word/));
+    fireEvent.click(within(rows()[1]).getByText(/He was in the beginning with God/));
+    await screen.findByRole("button", { name: "Deselect all (2)" });
+
+    // The two clicks under a double-click cancel each other out.
+    fireEvent.click(within(rows()[2]).getByText(/All things came into being/));
+    fireEvent.click(within(rows()[2]).getByText(/All things came into being/));
+    fireEvent.dblClick(within(rows()[2]).getByText(/All things came into being/));
+
+    await waitFor(() =>
+      expect(clipboard).toHaveBeenLastCalledWith(
+        expect.stringMatching(/^John 1:3 {2}/),
+      ),
+    );
+    expect(clipboard.mock.calls.at(-1)[0].split("\n")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Deselect all (2)" })).toBeInTheDocument();
   });
 
   it("drops the selection when the query changes", async () => {
@@ -221,6 +251,21 @@ describe("chapter view", () => {
     expect(document.querySelector(".il-toggle").className).toContain("active");
   });
 
+  it("closes the chapter with a named next, which crosses the end of a book", async () => {
+    render(<App />);
+    search("Malachi 4");
+    await waitFor(() => expect(document.querySelector(".chapter-block")).not.toBeNull());
+
+    const end = screen.getByRole("button", { name: "Next chapter: Matthew 1" });
+    expect(end.className).toContain("chapter-end-btn");
+    expect(end.textContent).toContain("Matthew 1");
+
+    fireEvent.click(end);
+    await waitFor(() =>
+      expect(document.querySelector(".chapter-title").textContent).toContain("Matthew 1"),
+    );
+  });
+
   it("restores a chapter from the #c= hash", async () => {
     window.history.replaceState(null, "", "/#c=43:1:3");
     render(<App />);
@@ -249,6 +294,29 @@ describe("preferences", () => {
     search("生命树");
     await waitFor(() => expect(localStorage.getItem("ls-lang")).toBe("cn"));
     expect(status()).toMatch(/^显示 \d+ \/ 共 \d+ 处匹配$/);
+  });
+
+  it("the toggle sticks on a keyword search, in the list and in a chapter", async () => {
+    render(<App />);
+    search("tabernacle");
+    await waitFor(() => expect(status()).toMatch(/^Showing \d+ of \d+ matches$/));
+
+    // An English search stays English by itself, but not once the reader says
+    // otherwise — it used to snap straight back.
+    fireEvent.click(screen.getByRole("button", { name: "中" }));
+    await waitFor(() => expect(localStorage.getItem("ls-lang")).toBe("cn"));
+    expect(status()).toMatch(/^显示 \d+ \/ 共 \d+ 处匹配$/);
+
+    // Opening a chapter out of those results is still the same query, so the
+    // language must not be re-applied there either.
+    fireEvent.click(screen.getByRole("button", { name: "EN" }));
+    await waitFor(() => expect(localStorage.getItem("ls-lang")).toBe("en"));
+    fireEvent.click(document.querySelector(".verse .ref"));
+    await waitFor(() => expect(document.querySelector(".chapter-title")).not.toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: "中" }));
+    await waitFor(() => expect(localStorage.getItem("ls-lang")).toBe("cn"));
+    expect(document.querySelector(".chapter-title").textContent).toMatch(/[一-鿿]/);
   });
 
   it("the reading style opens from the top bar and persists a scheme", async () => {

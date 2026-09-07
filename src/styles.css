@@ -155,6 +155,9 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* Without the explicit width the auto margins shrink-wrap the row inside the
+     column flex root, and `space-between` would have nothing to spread. */
+  width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 18px 16px 6px;
@@ -242,21 +245,21 @@ body {
   color: var(--color-accent);
 }
 
-/* Study gate: the Unlock button and the Notes toggle share the top-bar pill. */
+/* Study gate: the Unlock button and the Notes toggle share one round icon
+   button, so the slot keeps its size whichever of the two is showing. */
 .unlock-btn,
 .notes-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: var(--tool-h);
   height: var(--tool-h);
-  font-size: 12.5px;
-  font-weight: 600;
+  flex: none;
   color: var(--color-muted);
   background: var(--color-panel-2);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 0 13px;
-  line-height: 1;
+  padding: 0;
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
@@ -265,6 +268,12 @@ body {
 .notes-toggle:hover {
   color: var(--color-text);
   border-color: var(--color-accent);
+}
+
+/* Unlock is an action like the menu, so it sits at full strength; the Notes
+   toggle stays muted while off, to show at a glance that it is. */
+.unlock-btn {
+  color: var(--color-text);
 }
 
 .notes-toggle.active {
@@ -294,7 +303,7 @@ main {
   position: sticky;
   top: 0;
   z-index: 5;
-  padding: 12px 0;
+  padding: 8px 0;
   background: linear-gradient(var(--color-bg) 70%, transparent);
 }
 
@@ -306,8 +315,8 @@ main {
 
 #q {
   width: 100%;
-  padding: 16px 46px 16px 18px;
-  font-size: 18px;
+  padding: 10px 46px 10px 14px;
+  font-size: 17px;
   color: var(--color-text);
   background: var(--color-panel);
   border: 1px solid var(--color-border);
@@ -387,7 +396,14 @@ main {
   color: var(--color-muted);
   font-size: 14px;
   min-height: 20px;
-  margin: 4px 2px 12px;
+  margin: 2px 2px 8px;
+}
+
+/* With nothing to announce (a chapter view, or a cleared box) the line reserves
+   no space, so the reading sits close under the search box. */
+.status:empty {
+  min-height: 0;
+  margin: 0;
 }
 
 /* ---------------------------- results ---------------------------- */
@@ -398,8 +414,8 @@ main {
   gap: 4px;
 }
 
-/* Compact single-line verse row: [copy] [ref] text. The wide left border
-   leaves room for the selected accent bar without shifting the text. */
+/* Compact single-line verse row: [ref] text. The wide left border leaves room
+   for the selected accent bar without shifting the text. */
 .verse {
   display: flex;
   align-items: baseline;
@@ -414,34 +430,6 @@ main {
 .verse:hover {
   background: var(--color-sel-hover);
   border-color: var(--color-accent);
-}
-
-.copy-btn {
-  flex: 0 0 auto;
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 26px;
-  color: var(--color-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-}
-
-.copy-btn:hover {
-  color: var(--color-accent);
-  background: var(--color-panel-2);
-  border-color: var(--color-border);
-}
-
-.copy-btn.copied {
-  color: #2ec27e;
-  border-color: #2ec27e;
 }
 
 .verse .ref {
@@ -478,6 +466,10 @@ main {
   font-size: var(--reading-size);
   min-width: 0;
   cursor: pointer;
+  /* A double tap here copies the verse, so the browser must not take it for a
+     zoom instead — which it does by default, `touch-action` being a property
+     the .chapter-block value never reaches down here. */
+  touch-action: manipulation;
 }
 
 .verse.cn .text {
@@ -496,13 +488,6 @@ main {
 
 .verse.selected:hover {
   background: var(--color-sel-bg);
-}
-
-/* turn the copy button into a solid accent chip when its row is selected */
-.verse.selected .copy-btn {
-  color: #fff;
-  background: var(--color-accent);
-  border-color: var(--color-accent);
 }
 
 .verse.selected .ref {
@@ -578,17 +563,18 @@ main {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 8px 6px;
+  /* A horizontal drag across the text turns the chapter, so the browser is told
+     up front that the vertical pan and the pinch are still its own. */
+  touch-action: pan-y pinch-zoom;
 }
 
+/* The left padding is wider than the right: a selected verse draws a 3 px
+   accent bar inside that edge, and the verse number should not sit on it. */
 .chapter-block .verse {
   border: 0;
   border-radius: 6px;
-  padding: 5px 4px;
+  padding: 5px 4px 5px 11px;
   background: transparent;
-}
-
-.chapter-block .verse .copy-btn {
-  align-self: flex-start;
 }
 
 .chapter-block .verse:hover {
@@ -711,6 +697,64 @@ main {
   padding-bottom: 2px;
 }
 
+/* ------------------------ chapter-end navigation ------------------------ */
+
+/* A rule and real space between it and the last verse, so it reads as the end
+   of the chapter rather than one more thing under the thumb. */
+.chapter-end {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 6px 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.chapter-end-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* Still a thumb's worth of target, without standing taller than the text it
+     follows — the arrows in the title are 30 x 28. */
+  min-height: 34px;
+  max-width: 47%;
+  padding: 6px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.chapter-end-btn:hover,
+.chapter-end-btn:focus-visible {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* `auto` rather than space-between, so next keeps the right edge at Genesis 1,
+   where there is no previous beside it. */
+.chapter-end-next {
+  margin-left: auto;
+}
+
+.chapter-end-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapter-end-arrow {
+  flex: none;
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
 /* ---------------------------- empty states ---------------------------- */
 
 .empty,
@@ -786,6 +830,7 @@ main {
 .link-btn:hover {
   filter: brightness(1.15);
 }
+
 
 /* ---- Dialogs: "Add to Home Screen" walkthrough and the unlock prompt ---- */
 .help-dialog {
@@ -990,9 +1035,9 @@ main {
 
 /* ---------------------------- floating bits ---------------------------- */
 
-/* Floating "deselect all" pill, shown when ≥2 verses are selected. */
+/* Floating Copy / Deselect bar, shown when ≥2 verses are selected. */
 /* Back to top: it floats over the text it is covering, so it stays faint
-   until the pointer arrives, and it leaves room for the selection pill in the
+   until the pointer arrives, and it leaves room for the selection bar in the
    middle of the same edge. */
 .scroll-top {
   position: fixed;
@@ -1029,25 +1074,87 @@ main {
   }
 }
 
-.deselect-btn {
+.selection-bar {
   position: fixed;
   left: 50%;
-  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sel-btn {
   padding: 10px 18px;
   font-size: 14px;
   font-weight: 600;
   color: #fff;
   background: var(--color-accent);
-  border: 0;
+  border: 1px solid var(--color-accent);
   border-radius: 999px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.deselect-btn:hover {
+.sel-btn:hover {
   filter: brightness(1.08);
+}
+
+/* Copy is the quieter half of the pair: same pill, unfilled. */
+.sel-copy {
+  color: var(--color-accent);
+  background: var(--color-panel-2);
+}
+
+/* The confirmation strip at the foot of the page. It is shown as a popover so
+   it joins the top layer, where the modal study sheet already paints — a
+   footnote copied from the sheet would otherwise confirm itself out of sight. */
+.toast {
+  position: fixed;
+  inset: auto;
+  left: 50%;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 40;
+  margin: 0;
+  padding: 9px 16px;
+  width: max-content;
+  max-width: min(86vw, 420px);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  /* Inverted, so a message that lands over the footer or the reading text is
+     read at a glance in every scheme. */
+  color: var(--color-bg);
+  background: var(--color-text);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: toast-in 0.18s ease-out;
+}
+
+/* Clear of the selection bar, which shares this edge of the screen. */
+.toast.lifted {
+  bottom: calc(74px + env(safe-area-inset-bottom));
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
 }
 
 /* "More results" button under keyword search results */
@@ -1090,7 +1197,15 @@ main {
     padding: 8px 3px;
   }
   .chapter-block .verse {
-    padding: 5px 2px;
+    padding: 5px 2px 5px 9px;
+  }
+  .chapter-end {
+    padding: 11px 2px 4px;
+  }
+  .chapter-end-btn {
+    max-width: 48%;
+    padding: 6px 10px;
+    font-size: 13px;
   }
   .verse .text {
     font-size: calc(var(--reading-size) - 1px);
@@ -1115,11 +1230,6 @@ main {
   .lang-toggle button {
     padding: 0 11px;
     font-size: 13px;
-  }
-  .unlock-btn,
-  .notes-toggle {
-    padding: 0 10px;
-    font-size: 12px;
   }
 }
 
@@ -1155,6 +1265,80 @@ main {
 [data-theme="black"] {
   --color-note: #101116;
   --color-note-edge: #23252b;
+}
+
+/* ---- shortcuts dialog ---- */
+
+.shortcuts-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.sc-group {
+  padding: 14px 0 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sc-group:last-of-type {
+  border-bottom: 0;
+}
+
+.sc-group-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* The chips keep a column of their own, so the descriptions line up and the
+   list can be read down either side. */
+.sc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.sc-keys {
+  flex: 0 0 108px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sc-key {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.sc-what {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+/* Stacked on a phone, where 108px of chips would leave the text in a gutter. */
+@media (max-width: 480px) {
+  .sc-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .sc-keys {
+    flex: 0 0 auto;
+  }
 }
 
 /* ---- superscript markers ---- */
@@ -1506,6 +1690,8 @@ main {
 }
 
 .note-card {
+  /* Double-tapped to copy, like a verse — the zoom gesture would eat it. */
+  touch-action: manipulation;
   background: var(--color-note);
   border: 1px solid var(--color-note-edge);
   border-radius: 10px;
@@ -2146,7 +2332,7 @@ main {
 
 /* ------------------------------- book menu ------------------------------- */
 
-/* Sits inside the brand, left of the icon, so it reads as "open the Bible". */
+/* Leads the tool row, left of the language switch. */
 .menu-btn {
   display: inline-flex;
   align-items: center;

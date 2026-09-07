@@ -15,7 +15,8 @@ import StatusLine from "./components/StatusLine.jsx";
 import Results from "./components/Results.jsx";
 import ChapterView from "./components/ChapterView.jsx";
 import StudySheet from "./components/StudySheet.jsx";
-import DeselectButton from "./components/DeselectButton.jsx";
+import SelectionBar from "./components/SelectionBar.jsx";
+import { ToastProvider, useToast } from "./components/Toast.jsx";
 import ScrollTop from "./components/ScrollTop.jsx";
 import Footer from "./components/Footer.jsx";
 
@@ -109,6 +110,7 @@ function bookName(bs, bookIdx, lang) {
 
 function Shell() {
   const { state, actions, store } = useApp();
+  const showToast = useToast();
   const t = tr(state.lang);
   const inChapterView = state.view.kind === "chapter";
   const { bs, ready, error } = useBible(state.query !== "" || inChapterView);
@@ -156,11 +158,19 @@ function Shell() {
     [bs, ready, state.query, error],
   );
 
-  // A Chinese query always searches Chinese text (and vice versa), so follow it
-  // with the display language rather than showing text the reader did not ask for.
+  // A Chinese query always searches Chinese text (and vice versa), so a *new*
+  // query brings the display language with it rather than showing text the
+  // reader did not ask for. Only once per query, though: after that the EN/中
+  // toggle is the reader's to use, and re-running this would snap it straight
+  // back — including from a chapter opened out of those results, which is
+  // still standing on the same query.
+  const langFollowed = useRef(null);
   useEffect(() => {
-    if (result.kind === "word" && result.lang !== state.lang) actions.setLang(result.lang);
-  }, [result, state.lang, actions]);
+    if (result.kind !== "word") return;
+    if (langFollowed.current === state.query) return;
+    langFollowed.current = state.query;
+    if (result.lang !== state.lang) actions.setLang(result.lang);
+  }, [result, state.query, state.lang, actions]);
 
   /* ------------------------------- chapter ------------------------------- */
   // Either an explicitly opened chapter, or a whole-chapter query ("John 1"),
@@ -302,6 +312,19 @@ function Shell() {
     [bs, actions],
   );
 
+  /**
+   * "Genesis 5" for a sibling row — the destination the foot of the chapter
+   * offers, so a reader knows before tapping that the next one leaves the book.
+   */
+  const siblingLabel = useCallback(
+    (rowIdx) => {
+      if (rowIdx == null) return null;
+      const row = bs.verses[rowIdx];
+      return `${bookName(bs, row[COL.BOOK], state.lang)} ${row[COL.CHAP]}`;
+    },
+    [bs, state.lang],
+  );
+
   const openChapterForRow = useCallback(
     (rowIdx) => {
       const row = bs.verses[rowIdx];
@@ -317,23 +340,29 @@ function Shell() {
   );
 
   /* -------------------------------- copy -------------------------------- */
-  const copy = useCallback(
+  // Two ways in, and they no longer overlap: double-clicking a verse takes that
+  // verse alone, the bar takes every verse that is selected.
+  const ilCopy = state.interlinear && chapterRef != null;
+
+  const copyVerse = useCallback(
     async (row) => {
-      const il = state.interlinear && chapterRef != null;
-      let text;
-      if (state.selected.size > 0) {
-        const idxs = [...state.selected]
-          .map((k) => bs.refMap.get(k))
-          .filter((i) => i != null)
-          .sort((a, b) => a - b);
-        text = idxs.map((i) => verseToText(bs, bs.verses[i], state.lang, il)).join("\n");
-      } else {
-        text = verseToText(bs, row, state.lang, il);
-      }
-      await writeClipboard(text);
+      await writeClipboard(verseToText(bs, row, state.lang, ilCopy));
+      showToast(t.copiedVerse);
     },
-    [bs, state.selected, state.lang, state.interlinear, chapterRef],
+    [bs, state.lang, ilCopy, showToast, t],
   );
+
+  const copySelection = useCallback(async () => {
+    const idxs = [...state.selected]
+      .map((k) => bs.refMap.get(k))
+      .filter((i) => i != null)
+      .sort((a, b) => a - b);
+    if (!idxs.length) return;
+    await writeClipboard(
+      idxs.map((i) => verseToText(bs, bs.verses[i], state.lang, ilCopy)).join("\n"),
+    );
+    showToast(t.copiedVerses(idxs.length));
+  }, [bs, state.selected, state.lang, ilCopy, showToast, t]);
 
   /* --------------------- scroll restore (back button) --------------------- */
   useLayoutEffect(() => {
@@ -365,9 +394,11 @@ function Shell() {
               scrollKey={chapterRef.scrollKey}
               selected={state.selected}
               onToggleSelect={actions.toggleSelect}
-              onCopy={copy}
+              onCopy={copyVerse}
               canPrev={chapterData.prevRow != null}
               canNext={chapterData.nextRow != null}
+              prevLabel={siblingLabel(chapterData.prevRow)}
+              nextLabel={siblingLabel(chapterData.nextRow)}
               onPrev={() => goSibling(chapterData.prevRow)}
               onNext={() => goSibling(chapterData.nextRow)}
               onToggleInterlinear={actions.toggleInterlinear}
@@ -391,7 +422,7 @@ function Shell() {
               wordShown={state.wordShown}
               onOpenChapter={openChapterForRow}
               onToggleSelect={actions.toggleSelect}
-              onCopy={copy}
+              onCopy={copyVerse}
               onShowMore={actions.showMore}
             />
           )}
@@ -411,7 +442,7 @@ function Shell() {
           }}
         />
       ) : null}
-      <DeselectButton />
+      <SelectionBar onCopy={copySelection} />
       <ScrollTop />
       <Footer />
     </>
@@ -421,7 +452,9 @@ function Shell() {
 export default function App() {
   return (
     <AppProvider>
-      <Shell />
+      <ToastProvider>
+        <Shell />
+      </ToastProvider>
     </AppProvider>
   );
 }

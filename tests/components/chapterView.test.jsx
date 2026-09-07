@@ -28,6 +28,8 @@ function setup(props = {}) {
       onCopy={onCopy}
       canPrev
       canNext
+      prevLabel="Luke 24"
+      nextLabel="John 2"
       onPrev={onPrev}
       onNext={onNext}
       onToggleInterlinear={onToggleInterlinear}
@@ -120,8 +122,43 @@ describe("ChapterView", () => {
     const { onToggleSelect, onCopy } = setup();
     fireEvent.click(screen.getByText(/He was in the beginning with God/));
     expect(onToggleSelect).toHaveBeenCalledWith("43:1:2");
-    fireEvent.click(screen.getAllByRole("button", { name: "Copy verse" })[0]);
+    fireEvent.dblClick(screen.getByText(/In the beginning was the Word/));
     expect(onCopy).toHaveBeenCalledWith(rows[0]);
+  });
+
+  it("copies on two taps, which is all a touch screen reports", () => {
+    const { onCopy, onToggleSelect } = setup();
+    const text = screen.getByText(/In the beginning was the Word/);
+    // No dblclick here: with double-tap zoom out of the way a phone sends two
+    // plain clicks and nothing else.
+    fireEvent.click(text);
+    fireEvent.click(text);
+    expect(onCopy).toHaveBeenCalledWith(rows[0]);
+    expect(onCopy).toHaveBeenCalledTimes(1);
+    // Selected and put back, so the row is left as it was found.
+    expect(onToggleSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it("copies once when a mouse sends the clicks and the dblclick", () => {
+    const { onCopy } = setup();
+    const text = screen.getByText(/In the beginning was the Word/);
+    fireEvent.click(text);
+    fireEvent.click(text);
+    fireEvent.dblClick(text);
+    expect(onCopy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not copy two taps that are far apart", () => {
+    const { onCopy, onToggleSelect } = setup();
+    const text = screen.getByText(/In the beginning was the Word/);
+    const now = vi.spyOn(Date, "now");
+    now.mockReturnValue(10_000);
+    fireEvent.click(text);
+    now.mockReturnValue(12_000);
+    fireEvent.click(text);
+    now.mockRestore();
+    expect(onCopy).not.toHaveBeenCalled();
+    expect(onToggleSelect).toHaveBeenCalledTimes(2);
   });
 
   it("marks selected verses", () => {
@@ -139,9 +176,41 @@ describe("ChapterView", () => {
     expect(alt[0].textContent).toContain("All things came into being through Him");
   });
 
+  it("repeats prev/next at the foot of the chapter, naming where each one goes", () => {
+    const { onPrev, onNext } = setup();
+    const block = document.querySelector(".chapter-block");
+    expect(block.lastElementChild.className).toContain("chapter-end");
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous chapter: Luke 24" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next chapter: John 2" }));
+    expect(onPrev).toHaveBeenCalledTimes(1);
+    expect(onNext).toHaveBeenCalledTimes(1);
+    // The named pair leaves the header arrows unambiguous.
+    expect(screen.getByRole("button", { name: "Previous chapter" })).toBeInTheDocument();
+  });
+
+  it("drops the chapter-end button at the end of the canon", () => {
+    setup({ canPrev: false, prevLabel: null });
+    const ends = document.querySelectorAll(".chapter-end-btn");
+    expect(ends).toHaveLength(1);
+    expect(ends[0].className).toContain("chapter-end-next");
+    expect(screen.getByRole("button", { name: "Previous chapter" })).toBeDisabled();
+  });
+
+  it("hides the whole end row when neither direction exists", () => {
+    setup({ canPrev: false, canNext: false, prevLabel: null, nextLabel: null });
+    expect(document.querySelector(".chapter-end")).toBeNull();
+  });
+
+  it("arrives at a new chapter instantly rather than scrolling smoothly to it", () => {
+    setup({ scroll: "top" });
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
+  });
+
   it("shows Chinese labels and text in cn", () => {
-    setup({ lang: "cn" });
+    setup({ lang: "cn", prevLabel: "路加福音 24" });
     expect(screen.getByRole("button", { name: "上一章" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "上一章：路加福音 24" })).toBeInTheDocument();
     expect(screen.getByText("太初有话")).toBeInTheDocument();
     // Verse 3 has no Chinese text, so the English is used verbatim.
     expect(screen.getByText(/All things came into being through Him/)).toBeInTheDocument();

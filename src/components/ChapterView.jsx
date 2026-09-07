@@ -1,14 +1,14 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import CopyButton from "./CopyButton.jsx";
 import VerseText from "./VerseText.jsx";
 import OutlineHeading from "./OutlineHeading.jsx";
 import BookInfoCard from "./BookInfoCard.jsx";
 import RefTooltip from "./RefTooltip.jsx";
 import { useSelectPulse } from "../hooks/useSelectPulse.js";
+import { useSwipeNav } from "../hooks/useSwipeNav.js";
 import { pickHalf } from "../hooks/useStudyChapter.js";
 import { isMidVerse, outlineForChapter } from "../hooks/useStudyBook.js";
 import { COL } from "../search.js";
-import { textFor, verseKey } from "../lib/format.js";
+import { tapToCopy, textFor, verseKey } from "../lib/format.js";
 import { tr } from "../lib/i18n.js";
 
 /** Scroll `el` to just below the sticky search bar. */
@@ -68,7 +68,6 @@ function ChapterVerse({
   onMarker,
   onVerseNumber,
 }) {
-  const t = tr(lang);
   const pop = useSelectPulse(selected);
   const vn = row[COL.VERSE];
   const book = row[COL.BOOK];
@@ -88,9 +87,8 @@ function ChapterVerse({
 
   return (
     <article className={cls} data-verse-no={vn}>
-      <CopyButton onCopy={onCopy} label={t.copyAria} title={t.copy} />
       {interlinear ? (
-        <span className="text il-stack" onClick={onToggleSelect}>
+        <span className="text il-stack" {...tapToCopy(onToggleSelect, onCopy)}>
           {hasApparatus && onVerseNumber ? (
             <button
               type="button"
@@ -129,7 +127,7 @@ function ChapterVerse({
           </span>
         </span>
       ) : (
-        <span className="text" onClick={onToggleSelect}>
+        <span className="text" {...tapToCopy(onToggleSelect, onCopy)}>
           <VerseText
             text={textFor(row, lang)}
             book={book}
@@ -143,6 +141,47 @@ function ChapterVerse({
         </span>
       )}
     </article>
+  );
+}
+
+/**
+ * The pair the reader actually reaches. The arrows in the title have scrolled
+ * away by the time a chapter is finished, so the foot of it carries its own —
+ * named, because at the end of a book the next chapter is in the next book and
+ * a bare arrow does not say so.
+ */
+function ChapterEndNav({ t, canPrev, canNext, prevLabel, nextLabel, onPrev, onNext }) {
+  // Nothing to offer without a name for it, and nothing to name past the canon.
+  const prev = canPrev && prevLabel;
+  const next = canNext && nextLabel;
+  if (!prev && !next) return null;
+  return (
+    <nav className="chapter-end">
+      {prev ? (
+        <button
+          type="button"
+          className="chapter-end-btn chapter-end-prev"
+          aria-label={t.prevChapterTo(prevLabel)}
+          title={t.prevChapterTo(prevLabel)}
+          onClick={onPrev}
+        >
+          <span className="chapter-end-arrow" aria-hidden="true">&#8592;</span>
+          <span className="chapter-end-label">{prevLabel}</span>
+        </button>
+      ) : null}
+      {next ? (
+        <button
+          type="button"
+          className="chapter-end-btn chapter-end-next"
+          aria-label={t.nextChapterTo(nextLabel)}
+          title={t.nextChapterTo(nextLabel)}
+          onClick={onNext}
+        >
+          <span className="chapter-end-label">{nextLabel}</span>
+          <span className="chapter-end-arrow" aria-hidden="true">&#8594;</span>
+        </button>
+      ) : null}
+    </nav>
   );
 }
 
@@ -167,6 +206,8 @@ export default function ChapterView({
   onCopy,
   canPrev = false,
   canNext = false,
+  prevLabel = null,
+  nextLabel = null,
   onPrev,
   onNext,
   onToggleInterlinear,
@@ -219,7 +260,10 @@ export default function ChapterView({
     setFocused(null);
     if (scroll === "none") return;
     if (scroll === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // An arrival, not a trip: the chapter under the animation has already been
+      // replaced, and a smooth scroll started from the foot of a long one crawls
+      // (the same reason ScrollTop animates the journey itself).
+      window.scrollTo({ top: 0 });
       return;
     }
     const firstVerse = verses[0]?.[COL.VERSE];
@@ -256,6 +300,9 @@ export default function ChapterView({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [canPrev, canNext, onPrev, onNext]);
+
+  // What ←/→ are to a keyboard, a flick across the text is to a thumb.
+  useSwipeNav(rootRef, { canPrev, canNext, onPrev, onNext });
 
   return (
     <div className="chapter-block" ref={rootRef}>
@@ -393,6 +440,15 @@ export default function ChapterView({
           </Fragment>
         );
       })}
+      <ChapterEndNav
+        t={t}
+        canPrev={canPrev}
+        canNext={canNext}
+        prevLabel={prevLabel}
+        nextLabel={nextLabel}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
     </div>
   );
 }

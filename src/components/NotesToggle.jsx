@@ -1,10 +1,10 @@
+import { NotesIcon } from "./icons.jsx";
 import { useApp } from "../state/AppProvider.jsx";
 import { tr } from "../lib/i18n.js";
 
 /**
- * The Notes / 注解 on-off switch that replaces the Unlock button once the
- * study data is unlocked. Subtask C only wires the state (`ls-study`); subtask
- * D makes it drive the apparatus rendering in the chapter view.
+ * The study-notes on-off switch that replaces the Unlock button once the study
+ * data is unlocked; it drives the apparatus in the chapter view (`ls-study`).
  */
 export default function NotesToggle() {
   const { state, actions } = useApp();
@@ -14,10 +14,11 @@ export default function NotesToggle() {
       type="button"
       className={`notes-toggle${state.study ? " active" : ""}`}
       aria-pressed={state.study}
+      aria-label={t.notes}
       title={t.notesAria}
       onClick={() => actions.setStudy(!state.study)}
     >
-      {t.notes}
+      <NotesIcon />
     </button>
   );
 }

@@ -15,7 +15,10 @@ const en = {
   backChapter: "Back to previous chapter",
   attribution: "Footnotes, outlines and cross-references © Living Stream Ministry",
   copy: "Copy",
-  copyAria: "Copy verse",
+  copySelected: (n) => `Copy the ${n} selected verses`,
+  copiedVerse: "Verse copied",
+  copiedVerses: (n) => `${n} verses copied`,
+  copiedNote: "Footnote copied",
   showChapter: "Show full chapter",
   enVersification: "(EN versification)",
   noResults: "No results found.",
@@ -33,6 +36,10 @@ const en = {
   interlinear: "Interlinear",
   prevChapter: "Previous chapter",
   nextChapter: "Next chapter",
+  // The foot of the chapter names where it is going, so the arrow alone
+  // never has to carry a book boundary.
+  prevChapterTo: (ref) => `Previous chapter: ${ref}`,
+  nextChapterTo: (ref) => `Next chapter: ${ref}`,
   deselect: (n) => `Deselect all (${n})`,
   styleTitle: "Reading style",
   colourScheme: "Colour scheme",
@@ -57,6 +64,11 @@ const en = {
   },
   installLink: "Add to home",
   scrollTop: "Back to top",
+  shortcutsLink: "Guide",
+  // The hover tooltip says what the icon is for; the label above names it.
+  shortcutsTip: "Shortcuts and gestures — every way to move, search and copy, by key, mouse or thumb",
+  shortcutsTitle: "Shortcuts and gestures",
+  shortcutsNote: "A tap and a click do the same thing; where a phone and a mouse differ, both are listed.",
   abbrevLink: "Book name abbreviations",
   abbrevTitle: "Book name abbreviations",
   abbrevIntro:
@@ -130,7 +142,10 @@ const cn = {
   backChapter: "返回上一章",
   attribution: "注解、纲目与串珠 © 台湾福音书房 / 水流职事站",
   copy: "复制",
-  copyAria: "复制经文",
+  copySelected: (n) => `复制已选的 ${n} 节经文`,
+  copiedVerse: "已复制经文",
+  copiedVerses: (n) => `已复制 ${n} 节经文`,
+  copiedNote: "已复制注解",
   showChapter: "查看整章",
   enVersification: "（英文分节）",
   noResults: "未找到结果。",
@@ -147,9 +162,15 @@ const cn = {
   interlinear: "对照",
   prevChapter: "上一章",
   nextChapter: "下一章",
+  prevChapterTo: (ref) => `上一章：${ref}`,
+  nextChapterTo: (ref) => `下一章：${ref}`,
   deselect: (n) => `取消选择 (${n})`,
   installLink: "添加到主屏",
   scrollTop: "回到顶部",
+  shortcutsLink: "指南",
+  shortcutsTip: "快捷键与手势——用键盘、鼠标或手指翻页、搜索与复制的所有方式",
+  shortcutsTitle: "快捷键与手势",
+  shortcutsNote: "点按与点击作用相同；手机与鼠标不同之处，两者都已列出。",
   abbrevLink: "书卷简称",
   abbrevTitle: "书卷简称",
   abbrevIntro: "搜索框接受下列任一写法，中英文皆可，不分大小写。",
@@ -238,6 +259,116 @@ export function tr(lang) {
  * are performed. `w`/`h` are the intrinsic pixel sizes so the dialog does not
  * jump while the images load. Each caption is a list of runs; a `b` run is bold.
  */
+/**
+ * Every way the reader can drive the app, grouped by what they are trying to
+ * do. A chip is either a plain string, when the symbol carries across both
+ * languages (an arrow, a key name), or a `{ en, cn }` pair when it is a word.
+ *
+ * `study: true` marks a group that is only true once the apparatus is unlocked.
+ */
+export const SHORTCUTS = [
+  {
+    en: "Moving between chapters",
+    cn: "在章之间移动",
+    rows: [
+      {
+        k: ["←", "→"],
+        en: "Previous / next chapter. Not while the cursor is in the search box.",
+        cn: "上一章 / 下一章。光标在搜索框内时不生效。",
+      },
+      {
+        k: [{ en: "Swipe", cn: "滑动" }],
+        en: "Flick left across the text for the next chapter, right for the previous one.",
+        cn: "在经文上向左滑到下一章，向右滑到上一章。",
+      },
+      {
+        k: ["←", "→"],
+        en: "The same pair sits in the chapter title and again at the foot of the chapter, where the next one is named.",
+        cn: "章标题处与整章末尾各有一组同样的箭头，末尾那组还写明了下一章的名称。",
+      },
+      {
+        k: ["↑"],
+        en: "Back to the top — the round button appears at the corner once the page has been scrolled.",
+        cn: "回到顶部——页面滚动后，角落会出现圆形按钮。",
+      },
+    ],
+  },
+  {
+    en: "Searching",
+    cn: "搜索",
+    rows: [
+      {
+        k: ["Esc"],
+        en: "Clear the search box.",
+        cn: "清空搜索框。",
+      },
+      {
+        k: [{ en: "Click", cn: "点击" }, { en: "Tap", cn: "点按" }],
+        en: "A reference in the results opens that chapter at the verse.",
+        cn: "点击结果中的出处，即打开该章并定位到该节。",
+      },
+      {
+        k: ["Enter", "Space"],
+        en: "Open the chapter of the reference that has the keyboard focus.",
+        cn: "打开当前键盘焦点所在出处的整章。",
+      },
+      {
+        k: [{ en: "Back", cn: "返回" }],
+        en: "The arrow beside the search box returns to the results, paged and scrolled as they were left.",
+        cn: "搜索框旁的箭头返回结果列表，并保持原来的翻页与滚动位置。",
+      },
+    ],
+  },
+  {
+    en: "Selecting and copying",
+    cn: "选择与复制",
+    rows: [
+      {
+        k: [{ en: "Click", cn: "点击" }, { en: "Tap", cn: "点按" }],
+        en: "Select a verse. Tap it again to let it go.",
+        cn: "选中一节。再点一次取消。",
+      },
+      {
+        k: [{ en: "Double-click", cn: "双击" }, { en: "Double-tap", cn: "双击" }],
+        en: "Copy that verse with its reference. The row is left exactly as it was found.",
+        cn: "连同出处复制该节。该行的选中状态保持不变。",
+      },
+      {
+        k: ["2+"],
+        en: "With two or more verses selected, a Copy bar appears at the foot of the screen.",
+        cn: "选中两节或以上时，屏幕底部会出现复制条。",
+      },
+    ],
+  },
+  {
+    study: true,
+    en: "Notes and outlines",
+    cn: "注解与纲目",
+    rows: [
+      {
+        k: [{ en: "Tap", cn: "点按" }],
+        en: "A verse number, or a superscript marker in the text, opens the notes for it.",
+        cn: "点按节号或经文中的上标记号，打开对应的注解。",
+      },
+      {
+        k: [{ en: "Double-click", cn: "双击" }, { en: "Double-tap", cn: "双击" }],
+        en: "Copy a note card, with the reference and the word it hangs on.",
+        cn: "复制注解卡片，连同出处与所注的词。",
+      },
+      {
+        k: [{ en: "Hover", cn: "悬停" }],
+        en: "A mouse resting on a reference link previews the verse. A touch screen taps straight through to it instead.",
+        cn: "鼠标停在出处链接上会预览该节。触屏则直接点按前往。",
+      },
+      {
+        k: [{ en: "Outline", cn: "纲目" }, { en: "Book", cn: "简介" }],
+        en: "The buttons in the chapter title open the outline and the book introduction.",
+        cn: "章标题处的按钮打开纲目与书卷简介。",
+      },
+    ],
+  },
+];
+
 export const HELP_STEPS = [
   {
     img: "assets/ios-1-more.jpg",

@@ -105,3 +105,56 @@ export async function writeClipboard(text) {
     /* ignore */
   }
 }
+
+/** Two clicks this close together are one gesture, from a mouse or a thumb. */
+const TAP_GAP_MS = 350;
+/** How long one copy stays done, so the two routes below cannot double up. */
+const COPY_GUARD_MS = 500;
+
+/** When each element was last tapped, and last copied from. */
+const lastTap = new WeakMap();
+const lastCopy = new WeakMap();
+
+function copyOnce(el, onCopy) {
+  const now = Date.now();
+  if (now - (lastCopy.get(el) ?? 0) < COPY_GUARD_MS) return;
+  lastCopy.set(el, now);
+  // Undo the word the browser selected under the second click.
+  globalThis.getSelection?.()?.removeAllRanges();
+  onCopy?.();
+}
+
+/**
+ * Tap to select, tap twice to copy.
+ *
+ * `dblclick` alone is not enough: a touch screen with double-tap zoom out of
+ * the way stops waiting for a second tap and reports two unrelated clicks, and
+ * no `dblclick` at all. So the pair is counted here from the clicks every
+ * platform does send — the browser has already decided a drag or a scroll is
+ * not a click — and `dblclick` is kept for the mouse, the guard above making it
+ * harmless when both arrive for the same gesture.
+ *
+ * The count lives against the element rather than in this closure, which the
+ * caller rebuilds on every render.
+ *
+ * @param onToggle the single-tap action, if the element has one
+ * @returns props to spread onto the element
+ */
+export function tapToCopy(onToggle, onCopy) {
+  return {
+    onClick(e) {
+      const el = e.currentTarget;
+      const now = Date.now();
+      const second = now - (lastTap.get(el) ?? 0) < TAP_GAP_MS;
+      lastTap.set(el, second ? 0 : now);
+      // The first tap selects the row and the second puts it back, so a copy
+      // leaves it exactly as it was found.
+      onToggle?.();
+      if (second) copyOnce(el, onCopy);
+    },
+    onDoubleClick(e) {
+      e.preventDefault();
+      copyOnce(e.currentTarget, onCopy);
+    },
+  };
+}
