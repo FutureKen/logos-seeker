@@ -1495,8 +1495,9 @@ main {
 }
 
 .bi-label {
-  flex: 0 0 auto;
-  min-width: 8.5em;
+  flex: 0 0 8.5em;
+  min-width: 0;
+  overflow-wrap: break-word;
   color: var(--color-muted);
   font-size: calc(var(--reading-size) - 3.5px);
   font-weight: 700;
@@ -2565,7 +2566,7 @@ main {
 
 @media (max-width: 480px) {
   .bi-label {
-    min-width: 6.5em;
+    flex-basis: 6.5em;
   }
   .chapter-tools .study-btn {
     padding: 4px 9px;
