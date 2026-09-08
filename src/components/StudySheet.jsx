@@ -331,11 +331,18 @@ function VerseTab({
   );
 }
 
-/** The anchor word a marker sits on: English carries it, Chinese slices it. */
+/**
+ * The words a marker sits on. Both halves carry `w` — English from the EPUB,
+ * Chinese recovered by `scripts/lemma-cn.mjs`. Chinese markers built before
+ * those words existed fall back to a two-character slice, which is often a
+ * character short or long but still points the reader at the right place.
+ */
 function anchorWord(marker, text, halfLang) {
-  if (halfLang !== "cn") return marker.w ?? "";
-  if (marker.p == null) return "";
-  return String(text ?? "").slice(marker.p, marker.p + 2);
+  if (marker.w) return marker.w;
+  if (halfLang !== "cn" || marker.p == null) return "";
+  return String(text ?? "")
+    .slice(marker.p, marker.p + 2)
+    .replace(/[，。；：？！、\s]+$/u, "");
 }
 
 function NoteCard({

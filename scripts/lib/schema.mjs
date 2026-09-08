@@ -46,6 +46,30 @@ function verseIndex(verses) {
 const isObj = (v) => v != null && typeof v === "object" && !Array.isArray(v);
 const isInt = (v) => Number.isInteger(v);
 
+/** Curly punctuation and case folded away, one character for one, so offsets survive. */
+const foldChars = (s) =>
+  s
+    .replace(/[‘’ʼ]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[‐-―]/g, "-")
+    .toLowerCase();
+
+/**
+ * Is `w` the verse text at `p`, allowing for the EPUB's typography and the
+ * couple of characters an alignment can be out by? Falls back to looking for
+ * the word anywhere in the verse, where the length-changing differences
+ * (an ellipsis for three dots, collapsed spaces) are folded too.
+ */
+function anchorInText(text, w, p, slack = 3) {
+  const t = foldChars(text);
+  const n = foldChars(w);
+  for (let d = 0; d <= slack; d++) {
+    if (t.startsWith(n, p - d) || t.startsWith(n, p + d)) return true;
+  }
+  const loose = (s) => foldChars(s).replace(/…/g, "...").replace(/\s+/g, " ");
+  return loose(text).includes(loose(w));
+}
+
 /* ------------------------------------------------------------------ refs */
 
 /** `Ref = [bookIdx, chapter, verse, verseEnd]`; verse 0 = whole chapter. */
@@ -334,9 +358,26 @@ function checkVerse(ctx, path, v, text, lang) {
       if (!(xrefs && key in xrefs)) ctx.err(`${mp}.x`, `no cross-reference "${key}" in \`x\``);
     }
     if (mk.n == null && mk.x == null) ctx.err(mp, "marker has neither `n` nor `x`");
+    // `w` is the words the note is about, printed beside it in the sheet. How
+    // far it can be trusted to match the verse differs by half, so each is held
+    // to what its pipeline actually guarantees.
     if (mk.w != null) {
-      if (typeof mk.w !== "string") ctx.err(`${mp}.w`, "anchor word must be a string");
-      else if (lang === "cn") ctx.warn(`${mp}.w`, "`w` is English-only; Chinese slices at `p` instead");
+      if (typeof mk.w !== "string" || !mk.w) {
+        ctx.err(`${mp}.w`, "anchor word must be a non-empty string");
+      } else if (text != null && mk.p != null) {
+        if (lang === "cn") {
+          // Built as a slice of this very string (`scripts/lemma-cn.mjs`), so
+          // anything else means the word and the text have drifted apart.
+          if (!text.startsWith(mk.w, mk.p)) {
+            ctx.err(`${mp}.w`, `anchor word ${JSON.stringify(mk.w)} is not the verse text at position ${mk.p}`);
+          }
+        } else if (!anchorInText(text, mk.w, mk.p)) {
+          // English `w` is the EPUB's own link text, which is authoritative but
+          // typeset differently (’ — …) and positioned by a separate alignment.
+          // Only a word that is nowhere in the verse is worth reporting.
+          ctx.warn(`${mp}.w`, `anchor word ${JSON.stringify(mk.w)} does not appear in the verse text`);
+        }
+      }
     }
 
     // Labels are unique per verse, except for repeat markers — a second

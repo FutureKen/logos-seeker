@@ -5,12 +5,17 @@
  *
  *   node scripts/build-study-cn.mjs [--book N | --all] [--out public/data/study]
  *                                   [--password … | env STUDY_PASSWORD] [--plain]
+ *                                   [--lemma scripts/data/cn-lemma]
  *
  * Per chapter the verse units are joined with a single space and compared with
  * the `verses.json` Chinese string (an exact match is the fast path); marker
  * offsets (`unitOffset + loc − 1`) are mapped through that comparison so every
  * `p` indexes the string the app actually renders. Markers that share a
  * position are merged into one label (digits before letters).
+ *
+ * Each marker's anchor word (`w`) comes from `<lemma>/{book}.json`, written by
+ * `scripts/lemma-cn.mjs` — the Chinese site records only where a marker sits,
+ * never which words it is about.
  *
  * Files are written into the **bilingual** study files: an existing file is
  * decrypted, its `cn` half replaced and its `en` half preserved, then
@@ -28,9 +33,10 @@ import { validateBookFile, validateChapterFile } from "./lib/schema.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = path.join(ROOT, "scripts/.cache/rcv-tw");
+const LEMMA = path.join(ROOT, "scripts/data/cn-lemma");
 
 export function parseArgs(argv) {
-  const o = { book: null, all: false, out: "public/data/study", password: null, plain: false, cache: CACHE, quiet: false };
+  const o = { book: null, all: false, out: "public/data/study", password: null, plain: false, cache: CACHE, lemma: LEMMA, quiet: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--all") o.all = true;
@@ -42,6 +48,8 @@ export function parseArgs(argv) {
     else if (a.startsWith("--book=")) o.book = Number(a.slice(7));
     else if (a.startsWith("--out=")) o.out = a.slice(6);
     else if (a.startsWith("--cache=")) o.cache = a.slice(8);
+    else if (a === "--lemma") o.lemma = argv[++i];
+    else if (a.startsWith("--lemma=")) o.lemma = a.slice(8);
   }
   o.password = passwordFromArgs(argv);
   return o;
@@ -196,6 +204,7 @@ function mergeText(runs) {
 /**
  * @param {object} raw cached `{book}/{chapter}.json`
  * @param {Map<number,string>} verseText verse number → exact verses.json CN text
+ * @param {object} [opts.lemma] `"chapter:verse:pos" → 词组`, from `lemma-cn.mjs`
  * @returns {{verses: object, stats: object}}
  */
 export function buildChapter(raw, verseText, opts = {}) {
@@ -203,7 +212,8 @@ export function buildChapter(raw, verseText, opts = {}) {
   const chapter = raw.chapter;
   const refOk = opts.refOk ?? (() => true);
   const maxVerse = opts.maxVerse ?? Infinity;
-  const stats = { verses: 0, match: 0, exact: 0, diff: 0, snap: 0, none: 0, unparsed: 0, notes: 0, xrefs: 0, outOfRange: 0, skipped: 0 };
+  const lemma = opts.lemma ?? null;
+  const stats = { verses: 0, match: 0, exact: 0, diff: 0, snap: 0, none: 0, unparsed: 0, notes: 0, xrefs: 0, outOfRange: 0, skipped: 0, noLemma: 0 };
 
   const unitsByVerse = groupBy(raw.verses, "segment_code");
   const notesByVerse = groupBy(raw.footnotes, "segment_code");
@@ -316,6 +326,16 @@ export function buildChapter(raw, verseText, opts = {}) {
 
     const m = [];
     for (const g of groups) {
+      // The anchor word for this position, when `lemma-cn.mjs` recovered one.
+      // It is only attached where it still matches the text at `p`, so a word
+      // recovered against an older `verses.json` is dropped rather than shown
+      // against the wrong characters.
+      let word = null;
+      if (g.p != null) {
+        const w = lemma?.[`${chapter}:${vn}:${g.p}`];
+        if (w && dst.startsWith(w, g.p)) word = w;
+        else stats.noLemma++;
+      }
       // One entry per note/cross-reference pair at this position: the usual
       // case is a single number beside a single letter ("1a"). When two notes
       // (or two letters) genuinely share a position they each keep an entry, so
@@ -328,6 +348,7 @@ export function buildChapter(raw, verseText, opts = {}) {
         if (!entry.l) continue;
         if (num != null) entry.n = Number(num);
         if (letter != null) entry.x = letter;
+        if (word) entry.w = word;
         m.push(entry);
       }
     }
@@ -523,6 +544,8 @@ export async function build(o) {
     const bdir = path.join(o.cache, String(meta.idx));
     const outBook = path.join(outDir, String(meta.idx));
     const sum = { book: meta.idx, cn: meta.cn, chapters: 0, ...blank() };
+    const lemmaFile = path.join(path.resolve(ROOT, o.lemma), `${meta.idx}.json`);
+    const lemma = fs.existsSync(lemmaFile) ? readJson(lemmaFile) : null;
 
     // book.json
     const rawBook = path.join(bdir, "book.json");
@@ -554,6 +577,7 @@ export async function build(o) {
       const { verses: built, stats } = buildChapter(raw, verseText, {
         refOk,
         maxVerse: meta.chapters[chapter - 1],
+        lemma,
       });
       sum.chapters++;
       for (const k of Object.keys(blank())) sum[k] += stats[k] ?? 0;
@@ -585,6 +609,7 @@ export async function build(o) {
       `book ${meta.idx} ${meta.cn}: ${sum.chapters} chapters, markers ` +
         `${sum.exact} exact / ${sum.diff} diff / ${sum.snap} snap / ${sum.none} none, ` +
         `${sum.notes} notes, ${sum.xrefs} xrefs, ${sum.unparsed} unparsed` +
+        (sum.noLemma ? `, ${sum.noLemma} without an anchor word` : "") +
         (sum.outOfRange ? `, ${sum.outOfRange} out-of-range` : "") +
         (sum.skipped ? `, ${sum.skipped} verse(s) not in verses.json` : ""),
     );
@@ -592,7 +617,7 @@ export async function build(o) {
   return { totals, perBook, outDir };
 }
 
-const blank = () => ({ verses: 0, match: 0, exact: 0, diff: 0, snap: 0, none: 0, unparsed: 0, notes: 0, xrefs: 0, outOfRange: 0, skipped: 0 });
+const blank = () => ({ verses: 0, match: 0, exact: 0, diff: 0, snap: 0, none: 0, unparsed: 0, notes: 0, xrefs: 0, outOfRange: 0, skipped: 0, noLemma: 0 });
 
 /** Warn (never fail) when the English half disagrees about the apparatus. */
 function crossCheck(prev, cnVerses) {
@@ -622,6 +647,8 @@ async function main() {
   console.log(
     `\n${totals.files} file(s) → ${path.relative(ROOT, outDir)}\n` +
       `markers: ${totals.exact} exact, ${totals.diff} diff, ${totals.snap} snap, ${totals.none} none\n` +
+      `${totals.noLemma} marker position(s) without an anchor word
+` +
       `${totals.notes} notes, ${totals.xrefs} cross-references, ${totals.unparsed} unparsed reference(s), ` +
       `${totals.outOfRange} out-of-range reference(s), ${totals.skipped} verse(s) skipped, ` +
       `${totals.warnings} schema warning(s)`,

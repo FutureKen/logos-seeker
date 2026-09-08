@@ -14,6 +14,9 @@ type Loc    = [chapter: number, verse: number, part: 0 | 1 | 2];
 type Run    = string | { i: string } | { ref: Ref; t: string } | { note: [number, number, number, number]; t: string } | { sup: string };
 type Rich   = Run[][];                       // paragraphs of runs
 type Marker = { l: string; p: number | null; n?: number | string; x?: string; w?: string };
+// `w` is the anchor word: the verse text at `p` that the note is about. Both
+// languages carry it (English from the EPUB, Chinese from scripts/lemma-cn.mjs);
+// where it is absent the sheet falls back to a short slice at `p`.
 type VerseApparatus = { m?: Marker[]; n?: Record<string, Rich>; x?: Record<string, XrefItem[]> };
 type XrefItem = { r: Ref; t: string; cf?: boolean };
 type OutlineEntry = { level: 1|2|3|4|5|6; label?: string; title: string; start: Loc; end: Loc; pos?: number | null };
@@ -52,6 +55,8 @@ type Segment = { t: string } | { m: number; l: string; x: boolean; floating?: bo
   nextLabel?: string | null;    //   "Genesis 5" / "创世记 5"; crosses book ends
   onPrev(): void; onNext(): void;      // shared by the header arrows, the ←/→
                                        //   keys, the chapter-end row and the swipe
+                                       //   (the keys stand down while any
+                                       //   <dialog open> covers the text)
   onToggleInterlinear(): void;
   onGoto(ref: Ref): void;       // reference link → push nav stack, render target
 
@@ -143,7 +148,17 @@ type SheetRequest =
 ```
 
 Native `<dialog>`; tabs `Verse | Outline | Book`; Esc closes it before the
-chapter view sees the key.
+chapter view sees the key. On the Verse tab ←/→ are the sheet's own: they move
+to the previous / next verse of the chapter that carries an apparatus, and do
+nothing past the last one either way. `ChapterView` ignores those keys while any
+dialog is open, so the chapter never turns underneath the sheet.
+
+A `{note}` link jumps the sheet to another note, in any book; the head grows a
+return arrow (left of EN/中) that goes back to the note it was followed from,
+one step per jump. It is the sheet's own trail, not the app's: a `{ref}` link
+leaves the sheet altogether and is undone by the search box's back arrow, which
+puts the sheet back as it was. Opening the sheet afresh from the chapter clears
+the trail.
 
 ## `<OutlineHeading>` — owned by D
 
@@ -156,6 +171,22 @@ chapter view sees the key.
 ```ts
 { info: BookInfo; lang: Lang; bookByIdx: Map<number, Book>; onGoto(ref: Ref): void }
 ```
+
+## The browser's Back — owned by C
+
+`src/hooks/useBackGuard.js` lends the browser's Back button to the app's own
+return arrows. While there is anywhere to return to it keeps one guard entry —
+same URL, `history.state.lsGuard` — at the top of the history stack; popping it
+takes one step back inside the app instead of leaving it, and the guard is laid
+again if there is further to go. `App` decides what one step is: the study
+sheet's own trail first (through `backSignal`, a nonce the sheet obeys), then
+`actions.back()`. So the search box's arrow, the sheet's arrow and the browser's
+Back always mean the same thing.
+
+Two known roughnesses, both pre-existing in shape: a guard buried under a later
+push (`location.hash = …` on a new search) is abandoned where it lies, costing
+one spare history entry; and on Android Chrome an open modal `<dialog>` answers
+the Back gesture itself — it closes the sheet, and no `popstate` reaches us.
 
 ## Unlock gate — owned by C
 

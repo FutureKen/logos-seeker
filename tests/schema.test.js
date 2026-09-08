@@ -71,6 +71,39 @@ describe("validateChapterFile catches violations", () => {
     );
   });
 
+  it("accepts a Chinese anchor word that matches the verse text", () => {
+    const obj = clone(chapterFixture);
+    obj.cn.verses["1"].m[0].w = "起初";
+    obj.cn.verses["1"].m[1].w = "神";
+    expect(validateChapterFile(obj, { books, verses }).errors).toEqual([]);
+  });
+
+  it("flags an anchor word that is not the text at its position", () => {
+    // Whether a word ends on a sensible boundary is the extractor's problem;
+    // all the contract can promise is that `w` is really the text at `p`.
+    has(
+      bad((o) => (o.cn.verses["1"].m[1].w = "创造")),
+      'cn.verses.1.m[1].w: anchor word "创造" is not the verse text at position 2',
+    );
+  });
+
+  it("tolerates the EPUB's typography in an English anchor word", () => {
+    // English `w` is the EPUB's own link text: it is authoritative, but typeset
+    // with curly punctuation and placed by a separate alignment, so it is not
+    // held to the exact-match rule the Chinese half is built to satisfy.
+    const obj = clone(chapterFixture);
+    obj.en.verses["1"].m[1].w = "Beginning";
+    expect(validateChapterFile(obj, { books, verses }).errors).toEqual([]);
+  });
+
+  it("warns, but does not fail, on an English word absent from the verse", () => {
+    const obj = clone(chapterFixture);
+    obj.en.verses["1"].m[1].w = "zebra";
+    const { errors, warnings } = validateChapterFile(obj, { books, verses });
+    expect(errors).toEqual([]);
+    has(warnings, 'en.verses.1.m[1].w: anchor word "zebra" does not appear in the verse text');
+  });
+
   it("flags a marker whose xref group is missing from `x`", () => {
     has(
       bad((o) => (o.en.verses["1"].m[2].x = "z")),

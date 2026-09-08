@@ -45,6 +45,7 @@
     "test:watch": "vitest",
     "study:en": "node scripts/build-study-en.mjs",
     "study:fetch": "node scripts/fetch-rcv-tw.mjs",
+    "study:lemma": "node scripts/lemma-cn.mjs",
     "study:cn": "node scripts/build-study-cn.mjs",
     "study:index": "node scripts/build-study-index.mjs",
     "study:validate": "node scripts/validate-study.mjs"

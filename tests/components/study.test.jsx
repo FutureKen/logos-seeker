@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import App from "../../src/App.jsx";
 import VerseText from "../../src/components/VerseText.jsx";
 import BookInfoCard from "../../src/components/BookInfoCard.jsx";
@@ -323,6 +323,112 @@ describe("study sheet", () => {
     expect(focused.textContent).toContain("Placeholder note text for marker 2");
   });
 
+  it("steps between the verses that have notes with ←/→, leaving the chapter alone", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    fireEvent.click(verseEl(2).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+
+    // The arrows are the sheet's while it is up: the chapter stays put.
+    fireEvent.keyDown(document, { key: "ArrowLeft" });
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:1"),
+    );
+    expect(screen.getByText("Genesis 1")).toBeInTheDocument();
+
+    // Genesis 1:1-3 are the only verses of the fixture with an apparatus, so
+    // the third one is the end of the line.
+    fireEvent.keyDown(document, { key: "ArrowRight" });
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:2"),
+    );
+    fireEvent.keyDown(document, { key: "ArrowRight" });
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:3"),
+    );
+    fireEvent.keyDown(document, { key: "ArrowRight" });
+    expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:3");
+    expect(screen.getByText("Genesis 1")).toBeInTheDocument();
+
+    // And a step back lands on the whole list of the previous verse, not on a
+    // card left over from the one before.
+    fireEvent.keyDown(document, { key: "ArrowLeft" });
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:2"),
+    );
+    expect(document.querySelector(".note-card.focused")).toBeNull();
+  });
+
+  it("returns to the note a {note} link was followed from", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    // Genesis 1:2 note 1 points back at Genesis 1:1 note 1. Nothing has been
+    // followed yet, so there is nothing to return to.
+    fireEvent.click(verseEl(2).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    expect(within(sheet()).queryByRole("button", { name: /^Back to/ })).toBeNull();
+
+    fireEvent.click(within(sheet()).getByRole("button", { name: "note 1" }));
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:1"),
+    );
+    expect(document.querySelector(".note-card.focused").dataset.card).toBe("0");
+
+    const back = within(sheet()).getByRole("button", { name: "Back to Genesis 1:2" });
+    fireEvent.click(back);
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:2"),
+    );
+    // One step back is the whole trail: the arrow goes with it.
+    expect(within(sheet()).queryByRole("button", { name: /^Back to/ })).toBeNull();
+    // The chapter behind the sheet never moved.
+    expect(screen.getByText("Genesis 1")).toBeInTheDocument();
+  });
+
+  it("the browser's Back walks the sheet's trail before the chapter's", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    fireEvent.click(verseEl(2).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    fireEvent.click(within(sheet()).getByRole("button", { name: "note 1" }));
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:1"),
+    );
+
+    await act(async () => {
+      window.history.back();
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:2"),
+    );
+    // The sheet is still up and the chapter behind it never moved.
+    expect(sheet().open).toBe(true);
+    expect(screen.getByText("Genesis 1")).toBeInTheDocument();
+  });
+
+  it("drops the return trail when the sheet is opened afresh", async () => {
+    unlockedSession();
+    await openGenesis1();
+
+    fireEvent.click(verseEl(2).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    fireEvent.click(within(sheet()).getByRole("button", { name: "note 1" }));
+    await waitFor(() =>
+      expect(within(sheet()).queryByRole("button", { name: /^Back to/ })).not.toBeNull(),
+    );
+
+    fireEvent.click(within(sheet()).getByRole("button", { name: "Close" }));
+    fireEvent.click(verseEl(3).querySelector(".vnum-btn"));
+    await waitFor(() =>
+      expect(document.querySelector(".sheet-title").textContent).toContain("Genesis 1:3"),
+    );
+    expect(within(sheet()).queryByRole("button", { name: /^Back to/ })).toBeNull();
+  });
+
   it("a verse-number tap lists every marker of the verse, with its cross-references", async () => {
     unlockedSession();
     await openGenesis1();
@@ -404,6 +510,37 @@ describe("study sheet", () => {
     await waitFor(() => expect(cards()[1].textContent).toContain("占位注解二"));
     // The chapter underneath is still English.
     expect(verseEl(1).textContent).toContain("God created the heavens and the earth.");
+  });
+
+  it("heads a Chinese note with the words it annotates", async () => {
+    unlockedSession();
+    await openGenesis1();
+    fireEvent.click(verseEl(1).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    fireEvent.click(within(sheet()).getByRole("button", { name: "中" }));
+
+    // 起初神创造诸天与地 — the second marker is on 神 alone. Slicing two
+    // characters at its position, as the sheet used to, gave "神创".
+    await waitFor(() =>
+      expect(cards().map((c) => c.querySelector(".nc-word")?.textContent)).toEqual([
+        "起初",
+        "神",
+        "创造",
+      ]),
+    );
+  });
+
+  it("falls back to a slice without its punctuation when a word is missing", async () => {
+    unlockedSession();
+    await openGenesis1();
+    fireEvent.click(verseEl(3).querySelector(".vnum-btn"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    fireEvent.click(within(sheet()).getByRole("button", { name: "中" }));
+
+    // 神说，要有光 — the marker sits on 说, and the slice runs into the comma.
+    await waitFor(() =>
+      expect(cards()[0].querySelector(".nc-word").textContent).toBe("说"),
+    );
   });
 
   it("lists the outline with the current chapter highlighted", async () => {
