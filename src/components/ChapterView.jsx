@@ -292,6 +292,10 @@ export default function ChapterView({
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const el = document.activeElement;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      // A dialog over the text — the study sheet above all — keeps the arrows
+      // for itself; turning the chapter underneath one is not what the reader
+      // is asking for.
+      if (document.querySelector("dialog[open]")) return;
       e.preventDefault();
       if (e.key === "ArrowLeft") {
         if (canPrev) onPrev?.();

@@ -96,6 +96,21 @@ describe("ChapterView", () => {
     input.remove();
   });
 
+  it("leaves ←/→ to a dialog open over the text", () => {
+    const { onPrev, onNext } = setup();
+    const d = document.createElement("dialog");
+    document.body.appendChild(d);
+    d.setAttribute("open", "");
+    fireEvent.keyDown(document, { key: "ArrowLeft" });
+    fireEvent.keyDown(document, { key: "ArrowRight" });
+    expect(onPrev).not.toHaveBeenCalled();
+    expect(onNext).not.toHaveBeenCalled();
+
+    d.remove();
+    fireEvent.keyDown(document, { key: "ArrowRight" });
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
   it("lands on the focus verse and highlights it briefly", () => {
     vi.useFakeTimers();
     setup({ focusVerse: 2, scroll: "verse" });

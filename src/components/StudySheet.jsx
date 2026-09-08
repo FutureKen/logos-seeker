@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStudyChapter, pickHalf } from "../hooks/useStudyChapter.js";
 import { useStudyBook } from "../hooks/useStudyBook.js";
 import { formatRef } from "../study/refFormat.js";
@@ -33,6 +33,7 @@ export default function StudySheet({
   onClose,
   onGoto,
   onNavState,
+  backSignal = 0,
 }) {
   const dialogRef = useRef(null);
   const bodyRef = useRef(null);
@@ -40,6 +41,11 @@ export default function StudySheet({
   const [req, setReq] = useState(request ?? null);
   const [tab, setTab] = useState(request?.kind ?? "verse");
   const [sheetLang, setSheetLang] = useState(request?.lang ?? lang);
+  // Where a `{note}` link was followed *from*, innermost last: a note may send
+  // the reader to another book entirely, and the way back is not the way the
+  // chapter view came in. Only these jumps are remembered — a tab, a language
+  // or an ←/→ step is undone by doing it again.
+  const [trail, setTrail] = useState([]);
   const t = tr(lang);
   const ts = tr(sheetLang);
 
@@ -52,6 +58,7 @@ export default function StudySheet({
     setReq(request);
     setTab(request.kind);
     setSheetLang(request.lang ?? lang);
+    setTrail([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request]);
 
@@ -60,8 +67,8 @@ export default function StudySheet({
   // out of here remembers that, and coming back puts it up again unchanged.
   useEffect(() => {
     if (!open || !req) return;
-    onNavState?.({ req, tab, lang: sheetLang });
-  }, [open, req, tab, sheetLang, onNavState]);
+    onNavState?.({ req, tab, lang: sheetLang, depth: trail.length });
+  }, [open, req, tab, sheetLang, trail.length, onNavState]);
 
   useEffect(() => {
     const d = dialogRef.current;
@@ -95,6 +102,46 @@ export default function StudySheet({
 
   const focus = focusIndex(apparatus, req?.focus);
 
+  // The verses of this chapter that carry an apparatus of their own, in verse
+  // order: the stops ←/→ move between while the sheet is up.
+  const stops = useMemo(() => {
+    const verses = ch.half?.verses;
+    if (!verses) return [];
+    return Object.keys(verses)
+      .filter((v) => verses[v]?.m?.length)
+      .map(Number)
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+  }, [ch.half]);
+
+  // ←/→ belong to the sheet while it is open. They step to the neighbouring
+  // verse that has notes of its own rather than turning the chapter underneath
+  // (ChapterView stands down for any open dialog); at either end of the
+  // chapter's notes they do nothing, so the sheet never moves off its verse
+  // into a blank one.
+  useEffect(() => {
+    if (!open || tab !== "verse" || !hasVerse) return;
+    function onKey(e) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      // Only a field *inside* the sheet can be typing: it is modal, so the
+      // search box behind it never sees the key however the browser reports
+      // where the focus sits.
+      const el = document.activeElement;
+      const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+      if (typing && dialogRef.current?.contains(el)) return;
+      e.preventDefault();
+      const to =
+        e.key === "ArrowLeft"
+          ? stops.filter((v) => v < req.verse).pop()
+          : stops.find((v) => v > req.verse);
+      if (to == null) return;
+      setReq((r) => ({ ...r, kind: "verse", verse: to, focus: null }));
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, tab, hasVerse, stops, req?.verse]);
+
   // Land on the card the marker points at (or the top of the list otherwise).
   useEffect(() => {
     if (!open) return;
@@ -121,23 +168,37 @@ export default function StudySheet({
   function openNote(note) {
     if (!Array.isArray(note)) return;
     const [b, c, v, num] = note;
+    if (req) setTrail((tl) => [...tl, { req, tab, lang: sheetLang }]);
     setReq({ kind: "verse", book: b, chapter: c, verse: v, focus: { note: num } });
     setTab("verse");
   }
 
-  const bookName = bookByIdx?.get?.(req?.book);
-  const bookLabel = bookName ? (sheetLang === "cn" ? bookName.cn || bookName.en : bookName.en) : "";
+  // The browser's Back, when the app has lent it to this arrow. A nonce, not
+  // a callback, so every press is a fresh instruction to obey.
+  useEffect(() => {
+    if (!backSignal) return;
+    goBack();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backSignal]);
+
+  /** The return arrow: back to the note the reader followed the link from. */
+  function goBack() {
+    const from = trail[trail.length - 1];
+    if (!from) return;
+    setTrail((tl) => tl.slice(0, -1));
+    setReq(from.req);
+    setTab(from.tab);
+    setSheetLang(from.lang);
+  }
+
   const verseLabel = hasVerse
     ? formatRef([req.book, req.chapter, req.verse, 0], sheetLang, bookByIdx)
     : "";
-  const title =
-    req == null
-      ? ts.studySheet
-      : tab === "book"
-        ? bookLabel
-        : tab === "outline"
-          ? `${bookLabel} ${req.chapter ?? ""}`.trim()
-          : verseLabel || bookLabel;
+  const title = placeName({ req, tab, lang: sheetLang }, bookByIdx) || ts.studySheet;
+
+  // The note the return arrow goes back to, named as the head names it.
+  const from = trail[trail.length - 1] ?? null;
+  const backLabel = from ? ts.backNote(placeName(from, bookByIdx)) : "";
 
   const fallbackLang =
     (tab === "verse" && ch.fallback && ch.lang) || (tab !== "verse" && bk.fallback && bk.lang);
@@ -161,6 +222,26 @@ export default function StudySheet({
             ) : null}
           </span>
           <span className="sheet-head-tools">
+            {from ? (
+              <button
+                type="button"
+                className="back-btn sheet-back"
+                aria-label={backLabel}
+                title={backLabel}
+                onClick={goBack}
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                  <path
+                    d="M9 5 4 10l5 5M4 10h10a5 5 0 0 1 0 10h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : null}
             <span className="sheet-lang" role="group" aria-label={t.langGroup}>
               <button
                 type="button"
@@ -245,6 +326,21 @@ export default function StudySheet({
       <RefTooltip containerRef={bodyRef} lang={sheetLang} />
     </dialog>
   );
+}
+
+/**
+ * How the head names a place in the sheet — its title, and the destination of
+ * the return arrow, which may well be in another book and another language.
+ */
+function placeName({ req, tab, lang }, bookByIdx) {
+  if (!req) return "";
+  const b = bookByIdx?.get?.(req.book);
+  const bookLabel = b ? (lang === "cn" ? b.cn || b.en : b.en) : "";
+  if (tab === "book") return bookLabel;
+  if (tab === "outline") return `${bookLabel} ${req.chapter ?? ""}`.trim();
+  return req.verse != null
+    ? formatRef([req.book, req.chapter, req.verse, 0], lang, bookByIdx)
+    : bookLabel;
 }
 
 function Tab({ id, tab, setTab, disabled, children }) {

@@ -228,6 +228,26 @@ describe("chapter view", () => {
     );
   });
 
+  it("gives the browser's Back the same step as the back button", async () => {
+    render(<App />);
+    search("love");
+    await waitFor(() => expect(status()).toMatch(/^Showing 20 of/));
+
+    fireEvent.click(document.querySelectorAll(".ref")[0]);
+    expect(document.querySelector(".chapter-block")).not.toBeNull();
+    await waitFor(() => expect(window.location.hash).toMatch(/^#c=[0-9]+:[0-9]+:[0-9]+$/));
+
+    // The guard entry is laid as soon as there is something to return to, so
+    // Back lands back in the results instead of leaving the app.
+    await act(async () => {
+      window.history.back();
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    await waitFor(() => expect(document.querySelector(".chapter-block")).toBeNull());
+    expect(status()).toMatch(/^Showing 20 of/);
+    expect(screen.queryByRole("button", { name: "Back to search results" })).toBeNull();
+  });
+
   it("renders a whole-chapter query as a chapter, with no back button", async () => {
     render(<App />);
     search("John 1");

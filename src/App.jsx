@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import AppProvider, { useApp } from "./state/AppProvider.jsx";
 import { useBible } from "./hooks/useBible.js";
 import { useHashQuery } from "./hooks/useHashQuery.js";
+import { useBackGuard } from "./hooks/useBackGuard.js";
 import { readLS, writeLS } from "./hooks/useLocalStorage.js";
 import { useStudyChapter } from "./hooks/useStudyChapter.js";
 import { useStudyBook } from "./hooks/useStudyBook.js";
@@ -228,6 +229,11 @@ function Shell() {
   // The sheet's own live state (which note, which tab, which language), kept in
   // a ref so following a reference can put it on the nav stack.
   const sheetState = useRef(null);
+  // How deep the sheet's own return trail is, and the nonce that pops it: this
+  // has to be state, not a ref, because the Back guard is laid and lifted as it
+  // changes.
+  const [sheetDepth, setSheetDepth] = useState(0);
+  const [sheetBack, setSheetBack] = useState(0);
 
   const studyState = !studyOn
     ? "off"
@@ -296,6 +302,23 @@ function Shell() {
       request: { ...pendingSheet.req, kind: pendingSheet.tab, lang: pendingSheet.lang },
     });
   }, [pendingSheet]);
+
+  /**
+   * One step back, whichever arrow the reader can see: the sheet's own return
+   * to the note a `{note}` link was followed from, and then the search box's
+   * return to the chapter or the results. `useBackGuard` gives the browser's
+   * Back button the same step, so the three never disagree.
+   */
+  // The last two conditions matter only at the edges: with the sheet gone
+  // (Notes off, or locked) its trail cannot be walked, and Back must not sit
+  // there swallowing presses on its behalf.
+  const sheetReturn = sheet.open && sheetDepth > 0 && state.unlocked && state.study;
+  const canReturn = sheetReturn || state.navStack.length > 0;
+  const goReturn = useCallback(() => {
+    if (sheetReturn) setSheetBack((n) => n + 1);
+    else actions.back();
+  }, [sheetReturn, actions]);
+  useBackGuard(canReturn, goReturn);
 
   const goSibling = useCallback(
     (rowIdx) => {
@@ -435,10 +458,15 @@ function Shell() {
           lang={state.lang}
           bookByIdx={bs.bookByIdx}
           getVerseText={getVerseText}
-          onClose={() => setSheet((s) => ({ ...s, open: false }))}
+          backSignal={sheetBack}
+          onClose={() => {
+            setSheet((s) => ({ ...s, open: false }));
+            setSheetDepth(0);
+          }}
           onGoto={goto}
           onNavState={(st) => {
             sheetState.current = st;
+            setSheetDepth(st.depth ?? 0);
           }}
         />
       ) : null}

@@ -114,6 +114,8 @@ const en = {
   noOutline: "No outline available.",
   noBookInfo: "No book information available.",
   studySheet: "Study notes",
+  /** The sheet's own return arrow, naming the note it goes back to. */
+  backNote: (ref) => `Back to ${ref}`,
   infoAuthor: "Author",
   infoWritten: "Time of Writing",
   infoPlace: "Place of Writing",
@@ -232,6 +234,7 @@ const cn = {
   noOutline: "没有纲目。",
   noBookInfo: "没有本书简介。",
   studySheet: "注解",
+  backNote: (ref) => `返回 ${ref}`,
   infoAuthor: "著者",
   infoWritten: "著时",
   infoPlace: "著地",
@@ -273,8 +276,8 @@ export const SHORTCUTS = [
     rows: [
       {
         k: ["←", "→"],
-        en: "Previous / next chapter. Not while the cursor is in the search box.",
-        cn: "上一章 / 下一章。光标在搜索框内时不生效。",
+        en: "Previous / next chapter. Not while the cursor is in the search box, and not while a dialog is open over the text.",
+        cn: "上一章 / 下一章。光标在搜索框内、或经文上方有对话框打开时不生效。",
       },
       {
         k: [{ en: "Swipe", cn: "滑动" }],
@@ -314,8 +317,8 @@ export const SHORTCUTS = [
       },
       {
         k: [{ en: "Back", cn: "返回" }],
-        en: "The arrow beside the search box returns to the results, paged and scrolled as they were left.",
-        cn: "搜索框旁的箭头返回结果列表，并保持原来的翻页与滚动位置。",
+        en: "The arrow beside the search box returns to the results, paged and scrolled as they were left. The browser's own Back does the same.",
+        cn: "搜索框旁的箭头返回结果列表，并保持原来的翻页与滚动位置。浏览器自身的返回键作用相同。",
       },
     ],
   },
@@ -359,6 +362,16 @@ export const SHORTCUTS = [
         k: [{ en: "Hover", cn: "悬停" }],
         en: "A mouse resting on a reference link previews the verse. A touch screen taps straight through to it instead.",
         cn: "鼠标停在出处链接上会预览该节。触屏则直接点按前往。",
+      },
+      {
+        k: [{ en: "Return", cn: "返回" }],
+        en: "A note that points at another note opens it in place; the arrow beside EN/中 — or the browser's Back — returns to the note it was followed from.",
+        cn: "注解中指向另一处注解的链接会就地打开；EN/中 旁的箭头（或浏览器的返回键）返回原来的注解。",
+      },
+      {
+        k: ["←", "→"],
+        en: "With the notes open, the arrows step to the previous / next verse of the chapter that has notes; they stop at the last one either way.",
+        cn: "注解打开时，箭头移到本章上一节 / 下一节有注解的经文；两端到头即停。",
       },
       {
         k: [{ en: "Outline", cn: "纲目" }, { en: "Book", cn: "简介" }],

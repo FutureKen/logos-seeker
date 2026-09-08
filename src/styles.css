@@ -1610,6 +1610,14 @@ main {
   flex: 0 0 auto;
 }
 
+/* The same arrow as the search box, sized to sit beside the language pills. */
+.sheet-back {
+  position: static;
+  transform: none;
+  width: 28px;
+  height: 28px;
+}
+
 .sheet-lang {
   display: inline-flex;
   background: var(--color-panel-2);

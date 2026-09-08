@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
  * URL-hash state. `#q=<query>` is the shareable search (unchanged from the
  * vanilla app); `#c=<book>:<chapter>:<verse>` names a chapter view so a reload
  * or a browser Back lands where the reader was. The in-app back button still
- * runs off the nav stack, not the hash.
+ * runs off the nav stack, not the hash — and while that stack has anything in
+ * it, `useBackGuard` gives the browser's Back the same meaning.
  */
 
 /** @returns {{kind:"q", query:string} | {kind:"c", book:number, chapter:number, verse:number|null}} */
@@ -55,7 +56,9 @@ export function useHashQuery(state, actions) {
     if (want === have || (!want && !have)) return;
     if (state.view.kind === "chapter" || !want) {
       const url = window.location.pathname + window.location.search + want;
-      window.history.replaceState(null, "", url);
+      // Keep whatever state the entry carries: useBackGuard marks its own
+      // entries, and a chapter change must not rub the mark out.
+      window.history.replaceState(window.history.state, "", url);
     } else {
       window.location.hash = want;
     }
